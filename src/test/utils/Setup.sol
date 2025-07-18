@@ -4,8 +4,8 @@ pragma solidity ^0.8.18;
 import "forge-std/console2.sol";
 import {Test} from "forge-std/Test.sol";
 
-import {Strategy, ERC20} from "../../Strategy.sol";
-import {StrategyFactory} from "../../StrategyFactory.sol";
+import {LockstakeCumpounder, ERC20} from "../../LockstakeCumpounder.sol";
+// import {StrategyFactory} from "../../StrategyFactory.sol";
 import {IStrategyInterface} from "../../interfaces/IStrategyInterface.sol";
 
 // Inherit the events so they can be checked if desired.
@@ -24,7 +24,9 @@ contract Setup is Test, IEvents {
     ERC20 public asset;
     IStrategyInterface public strategy;
 
-    StrategyFactory public strategyFactory;
+    // StrategyFactory public strategyFactory;
+    address public lockstakeEngine = 0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3; // LOCKSTAKE_ENGINE
+    address public farm = 0x99cBC0e4E6427F6939536eD24d1275B95ff77404; // REWARDS_LSSKY_SPK
 
     mapping(string => address) public tokenAddrs;
 
@@ -53,17 +55,17 @@ contract Setup is Test, IEvents {
         _setTokenAddrs();
 
         // Set asset
-        asset = ERC20(tokenAddrs["DAI"]);
+        asset = ERC20(tokenAddrs["SKY"]);
 
         // Set decimals
         decimals = asset.decimals();
 
-        strategyFactory = new StrategyFactory(
-            management,
-            performanceFeeRecipient,
-            keeper,
-            emergencyAdmin
-        );
+        // strategyFactory = new StrategyFactory(
+        //     management,
+        //     performanceFeeRecipient,
+        //     keeper,
+        //     emergencyAdmin
+        // );
 
         // Deploy strategy and set variables
         strategy = IStrategyInterface(setUpStrategy());
@@ -81,14 +83,28 @@ contract Setup is Test, IEvents {
 
     function setUpStrategy() public returns (address) {
         // we save the strategy as a IStrategyInterface to give it the needed interface
-        IStrategyInterface _strategy = IStrategyInterface(
-            address(
-                strategyFactory.newStrategy(
-                    address(asset),
-                    "Tokenized Strategy"
-                )
-            )
+        IStrategyInterface _strategy = IStrategyInterface(address(new LockstakeCumpounder(lockstakeEngine, farm)));
+
+        _strategy.setPendingManagement(management);
+        _strategy.setKeeper(keeper);
+        _strategy.setPerformanceFeeRecipient(performanceFeeRecipient);
+        _strategy.setEmergencyAdmin(emergencyAdmin);
+
+        _strategy.setMinAmountToSell(1000e18);
+
+        bytes memory path = abi.encodePacked(
+            tokenAddrs["SPK"], // tokenIn
+            uint24(100), // 0.01%
+            tokenAddrs["USDC"],
+            uint24(100), // 0.01%
+            tokenAddrs["WETH"],
+            uint24(3000), // 0.3%
+            tokenAddrs["SKY"] // tokenOut
         );
+
+        _strategy.setUniV3Path(path);
+
+        _strategy.setOpenDeposits(true);
 
         vm.prank(management);
         _strategy.acceptManagement();
@@ -96,11 +112,7 @@ contract Setup is Test, IEvents {
         return address(_strategy);
     }
 
-    function depositIntoStrategy(
-        IStrategyInterface _strategy,
-        address _user,
-        uint256 _amount
-    ) public {
+    function depositIntoStrategy(IStrategyInterface _strategy, address _user, uint256 _amount) public {
         vm.prank(_user);
         asset.approve(address(_strategy), _amount);
 
@@ -108,11 +120,7 @@ contract Setup is Test, IEvents {
         _strategy.deposit(_amount, _user);
     }
 
-    function mintAndDepositIntoStrategy(
-        IStrategyInterface _strategy,
-        address _user,
-        uint256 _amount
-    ) public {
+    function mintAndDepositIntoStrategy(IStrategyInterface _strategy, address _user, uint256 _amount) public {
         airdrop(asset, _user, _amount);
         depositIntoStrategy(_strategy, _user, _amount);
     }
@@ -125,9 +133,7 @@ contract Setup is Test, IEvents {
         uint256 _totalIdle
     ) public {
         uint256 _assets = _strategy.totalAssets();
-        uint256 _balance = ERC20(_strategy.asset()).balanceOf(
-            address(_strategy)
-        );
+        uint256 _balance = ERC20(_strategy.asset()).balanceOf(address(_strategy));
         uint256 _idle = _balance > _assets ? _assets : _balance;
         uint256 _debt = _assets - _idle;
         assertEq(_assets, _totalAssets, "!totalAssets");
@@ -163,5 +169,8 @@ contract Setup is Test, IEvents {
         tokenAddrs["USDT"] = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
         tokenAddrs["DAI"] = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
         tokenAddrs["USDC"] = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+        tokenAddrs["SKY"] = 0x56072C95FAA701256059aa122697B133aDEd9279;
+        tokenAddrs["USDS"] = 0xdC035D45d973E3EC169d2276DDab16f1e407384F;
+        tokenAddrs["SPK"] = 0xc20059e0317DE91738d13af027DfC4a50781b066;
     }
 }
