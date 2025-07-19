@@ -30,9 +30,14 @@ contract LockstakeCumpounderFactory {
      * @param _farm The lockstake farm to be used by the strategy
      * @return . The address of the new strategy.
      */
-    function newStrategy(address _farm, string calldata _name, bytes calldata _path) external virtual returns (address) {
+    function newStrategy(address _farm, string calldata _name, bytes calldata _path)
+        external
+        virtual
+        returns (address)
+    {
         // tokenized strategies available setters.
-        IStrategyInterface _newStrategy = IStrategyInterface(address(new LockstakeCumpounder(lockstakeEngine, _farm, _name)));
+        IStrategyInterface _newStrategy =
+            IStrategyInterface(address(new LockstakeCumpounder(lockstakeEngine, _farm, _name)));
 
         _newStrategy.setPerformanceFeeRecipient(performanceFeeRecipient);
 
@@ -60,7 +65,7 @@ contract LockstakeCumpounderFactory {
     function setLockstakeEngine(address _lockstakeEngine) external {
         require(msg.sender == management, "!management");
         lockstakeEngine = _lockstakeEngine;
-    }    
+    }
 
     function isDeployedStrategy(address _strategy) external view returns (bool) {
         address _asset = IStrategyInterface(_strategy).asset();

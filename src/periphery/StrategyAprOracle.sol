@@ -6,7 +6,6 @@ import {IStrategyInterface} from "../interfaces/IStrategyInterface.sol";
 import {IQuoter} from "../interfaces/IQuoter.sol";
 
 contract StrategyAprOracle {
-
     address private constant UNI_V3_QUOTER = 0x5e55C9e631FAE526cd4B0526C4818D6e0a9eF0e3; // Uniswap V3 quoter on Mainnet
 
     /**
@@ -28,11 +27,7 @@ contract StrategyAprOracle {
      * @param _delta The difference in debt.
      * @return . The expected apr for the strategy represented as 1e18.
      */
-    function aprAfterDebtChange(address _strategy, int256 _delta)
-        external
-        view
-        returns (uint256)
-    {
+    function aprAfterDebtChange(address _strategy, int256 _delta) external view returns (uint256) {
         IStaking farm = IStaking(IStrategyInterface(_strategy).FARM());
 
         if (block.timestamp > farm.periodFinish()) {
@@ -57,9 +52,6 @@ contract StrategyAprOracle {
 
     function price(bytes memory _path) public view returns (uint256 output) {
         // get price of 1 Token from UniV3
-        (output,,,) = IQuoter(UNI_V3_QUOTER).quoteExactInput(
-            _path,
-            1e18
-        );
+        (output,,,) = IQuoter(UNI_V3_QUOTER).quoteExactInput(_path, 1e18);
     }
 }

@@ -60,12 +60,7 @@ contract Setup is Test, IEvents {
         // Set decimals
         decimals = asset.decimals();
 
-        strategyFactory = new LockstakeCumpounderFactory(
-            management,
-            performanceFeeRecipient,
-            keeper,
-            emergencyAdmin
-        );
+        strategyFactory = new LockstakeCumpounderFactory(management, performanceFeeRecipient, keeper, emergencyAdmin);
 
         // Deploy strategy and set variables
         strategy = IStrategyInterface(setUpStrategy());
@@ -82,7 +77,6 @@ contract Setup is Test, IEvents {
     }
 
     function setUpStrategy() public returns (address) {
-
         bytes memory path = abi.encodePacked(
             tokenAddrs["SPK"], // tokenIn
             uint24(100), // 0.01%
@@ -94,14 +88,15 @@ contract Setup is Test, IEvents {
         );
 
         // we save the strategy as a IStrategyInterface to give it the needed interface
-        IStrategyInterface _strategy = IStrategyInterface(address(strategyFactory.newStrategy(farm, "Lockstake SKY-SPK", path)));
+        IStrategyInterface _strategy =
+            IStrategyInterface(address(strategyFactory.newStrategy(farm, "Lockstake SKY-SPK", path)));
 
         vm.startPrank(management);
         _strategy.acceptManagement();
 
         _strategy.setMinAmountToSell(1000e18);
 
-        _strategy.setOpenDeposits(true);        
+        _strategy.setOpenDeposits(true);
 
         vm.stopPrank();
 

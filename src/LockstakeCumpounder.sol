@@ -173,12 +173,12 @@ contract LockstakeCumpounder is BaseHealthCheck {
     }
 
     /**
-     * @notice Set the Uniswap V3 path 
+     * @notice Set the Uniswap V3 path
      * @param _path Path, encoded for the Uni V3 router
      */
     function setUniV3Path(bytes calldata _path) external onlyManagement {
         uniV3Path = _path;
-    }    
+    }
 
     /**
      * @notice Set the minimum amount of rewardsToken to sell
