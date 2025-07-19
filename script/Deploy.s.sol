@@ -1,0 +1,49 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {Script} from "forge-std/Script.sol";
+import {LockstakeCumpounder} from "../src/LockstakeCumpounder.sol";
+import {LockstakeCumpounderFactory} from "../src/LockstakeCumpounderFactory.sol";
+import {console} from "forge-std/console.sol";
+import {IStrategyInterface} from "../src/interfaces/IStrategyInterface.sol";
+import {StrategyAprOracle} from "../src/periphery/StrategyAprOracle.sol";
+
+contract Deploy is Script {
+    address public constant LOCKSTAKE_ENGINE = 0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3;
+    address public constant REWARDS_LSSKY_SPK = 0x99cBC0e4E6427F6939536eD24d1275B95ff77404;
+
+    address public constant KEEPER = 0x604e586F17cE106B64185A7a0d2c1Da5bAce711E;
+    address public constant ACCOUNTANT = 0x5A74Cb32D36f2f517DB6f7b0A0591e09b22cDE69;
+    address public constant SMS = 0x16388463d60FFE0661Cf7F1f31a7D658aC790ff7;
+
+    address public constant SKY = 0x56072C95FAA701256059aa122697B133aDEd9279;
+    address public constant SPK = 0xc20059e0317DE91738d13af027DfC4a50781b066;
+    address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address public constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+
+    function run() public {
+        vm.startBroadcast();
+
+        StrategyAprOracle oracle = new StrategyAprOracle();
+        console.log("StrategyAprOracle deployed to:", address(oracle));
+
+        LockstakeCumpounderFactory factory = new LockstakeCumpounderFactory(SMS, ACCOUNTANT, KEEPER, SMS);
+
+        console.log("LockstakeCumpounderFactory deployed to:", address(factory));
+
+        bytes memory path = abi.encodePacked(
+            SPK, // tokenIn
+            uint24(100), // 0.01%
+            USDC,
+            uint24(100), // 0.01%
+            WETH,
+            uint24(3000), // 0.3%
+            SKY // tokenOut
+        );
+
+        address strategy = factory.newStrategy(REWARDS_LSSKY_SPK, "Lockstake SKY-SPK", path);
+        console.log("Lockstake SKY-SPK deployed to:", strategy);
+
+        vm.stopBroadcast();
+    }
+}
