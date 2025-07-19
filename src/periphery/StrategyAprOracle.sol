@@ -25,7 +25,7 @@ contract StrategyAprOracle {
      *
      * @param _strategy The token to get the apr for.
      * @param _delta The difference in debt.
-     * @return . The expected apr for the strategy represented as 1e18.
+     * @return The expected apr for the strategy represented as 1e18.
      */
     function aprAfterDebtChange(address _strategy, int256 _delta) external view returns (uint256) {
         IStaking farm = IStaking(IStrategyInterface(_strategy).FARM());
@@ -50,6 +50,9 @@ contract StrategyAprOracle {
         return tvl > 0 ? (rewardsPerYearSky * 1e18) / tvl : 0; // apr in 1e18 (1e18=100%)
     }
 
+    /// @notice Returns the price of a token using a Uniswap V3 path.
+    /// @param _path The Uniswap V3 path for the token pair.
+    /// @return output The price of the token.
     function price(bytes memory _path) public view returns (uint256 output) {
         // get price of 1 Token from UniV3
         (output,,,) = IQuoter(UNI_V3_QUOTER).quoteExactInput(_path, 1e18);

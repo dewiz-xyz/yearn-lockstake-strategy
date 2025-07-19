@@ -18,6 +18,11 @@ contract LockstakeCumpounderFactory {
     /// @notice Track the deployments. asset => pool => strategy
     mapping(address => address) public deployments;
 
+    /// @notice Constructor to set initial addresses.
+    /// @param _management The address of the management role.
+    /// @param _performanceFeeRecipient The address of the performance fee recipient.
+    /// @param _keeper The address of the keeper.
+    /// @param _emergencyAdmin The address of the emergency admin.
     constructor(address _management, address _performanceFeeRecipient, address _keeper, address _emergencyAdmin) {
         management = _management;
         performanceFeeRecipient = _performanceFeeRecipient;
@@ -28,7 +33,9 @@ contract LockstakeCumpounderFactory {
     /**
      * @notice Deploy a new Strategy.
      * @param _farm The lockstake farm to be used by the strategy
-     * @return . The address of the new strategy.
+     * @param _name The name of the new strategy.
+     * @param _path The Uniswap V3 path for swapping rewards.
+     * @return The address of the new strategy.
      */
     function newStrategy(address _farm, string calldata _name, bytes calldata _path)
         external
@@ -55,6 +62,10 @@ contract LockstakeCumpounderFactory {
         return address(_newStrategy);
     }
 
+    /// @notice Updates the management, performance fee recipient, and keeper addresses.
+    /// @param _management The new management address.
+    /// @param _performanceFeeRecipient The new performance fee recipient address.
+    /// @param _keeper The new keeper address.
     function setAddresses(address _management, address _performanceFeeRecipient, address _keeper) external {
         require(msg.sender == management, "!management");
         management = _management;
@@ -62,11 +73,16 @@ contract LockstakeCumpounderFactory {
         keeper = _keeper;
     }
 
+    /// @notice Sets the LockstakeEngine contract address.
+    /// @param _lockstakeEngine The new LockstakeEngine address.
     function setLockstakeEngine(address _lockstakeEngine) external {
         require(msg.sender == management, "!management");
         lockstakeEngine = _lockstakeEngine;
     }
 
+    /// @notice Checks if a strategy is deployed by this factory.
+    /// @param _strategy The address of the strategy to check.
+    /// @return A boolean indicating if the strategy is deployed by this factory.
     function isDeployedStrategy(address _strategy) external view returns (bool) {
         address _asset = IStrategyInterface(_strategy).asset();
         return deployments[_asset] == _strategy;

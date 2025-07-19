@@ -56,6 +56,10 @@ contract LockstakeCumpounder is BaseHealthCheck {
 
     mapping(address => bool) public allowed;
 
+    /// @notice Initializes the contract with the given parameters.
+    /// @param _lockstakeEngine The address of the LockstakeEngine contract.
+    /// @param _farm The address of the farm contract.
+    /// @param _name The name of the strategy.
     constructor(address _lockstakeEngine, address _farm, string memory _name) BaseHealthCheck(address(SKY), _name) {
         LOCK_STAKE_ENGINE = ILockstakeEngine(_lockstakeEngine);
         FARM = IStaking(_farm);
@@ -89,6 +93,8 @@ contract LockstakeCumpounder is BaseHealthCheck {
 
     // NOTE: If useAuction is true, we will use the auction to sell the REWARD_TOKEN rewards.
     //  If useAuction is false, we will swap the REWARD_TOKEN rewards to SKY through UniswapV2 and needs a private relay
+    /// @dev  Harvests rewards and reports the total assets under management.
+    /// @return _totalAssets The total assets under management.
     function _harvestAndReport() internal override returns (uint256 _totalAssets) {
         LOCK_STAKE_ENGINE.getReward(address(this), URN_INDEX, address(FARM), address(this));
 
@@ -109,6 +115,9 @@ contract LockstakeCumpounder is BaseHealthCheck {
         _totalAssets = estimatedTotalAssets();
     }
 
+    /// @notice Returns the available deposit limit for a given address.
+    /// @param _receiver The address to check the deposit limit for.
+    /// @return The available deposit limit.
     function availableDepositLimit(address _receiver) public view override returns (uint256) {
         if (openDeposits || allowed[_receiver]) {
             return type(uint256).max;
@@ -117,33 +126,9 @@ contract LockstakeCumpounder is BaseHealthCheck {
         return 0;
     }
 
-    /**
-     * @dev Used to swap a specific amount of `_from` to `_to`.
-     * This will check and handle all allowances as well as not swapping
-     * unless `_amountIn` is greater than the set `_minAmountOut`
-     *
-     * If one of the tokens matches with the `base` token it will do only
-     * one jump, otherwise will do two jumps.
-     *
-     * The corresponding uniFees for each token pair will need to be set
-     * other wise this function will revert.
-     *
-     * @param _path Path for swap execution (encoded for Uni V3 router)
-     * @param _amountIn The amount of `_from` we will swap.
-     * @param _minAmountOut The min of `_to` to get out.
-     * @return _amountOut The actual amount of `_to` that was swapped to
-     */
-    function _swapFrom(bytes memory _path, uint256 _amountIn, uint256 _minAmountOut)
-        internal
-        returns (uint256 _amountOut)
-    {
-        _amountOut = ISwapRouter(UNI_V3_ROUTER).exactInput(
-            ISwapRouter.ExactInputParams(_path, address(this), block.timestamp, _amountIn, _minAmountOut)
-        );
-    }
-
-    /// @dev  Returns an approximate value of total assets (SKY) under management:
-    ///       what’s currently staked in URN #0 plus any SKY already sitting in the contract.
+    /// @notice Returns an approximate value of total assets (SKY) under management:
+    ///         what’s currently staked in URN #0 plus any SKY already sitting in the contract.
+    /// @return The total assets under management.
     function estimatedTotalAssets() public view returns (uint256) {
         // Locked & staked SKY in URN #0:
         uint256 stakedSky = balanceOfStake();
@@ -152,10 +137,13 @@ contract LockstakeCumpounder is BaseHealthCheck {
         return stakedSky + idleSky;
     }
 
+    /// @notice Returns the amount of SKY staked in the farm for the URN.
+    /// @return The amount of SKY staked.
     function balanceOfStake() public view returns (uint256) {
         return FARM.balanceOf(URN);
     }
 
+    /// @notice Claims rewards and kicks the auction if the balance is sufficient.
     function kick() external onlyKeepers {
         require(useAuction, "!useAuction");
 
@@ -167,35 +155,54 @@ contract LockstakeCumpounder is BaseHealthCheck {
         }
     }
 
+    /// @dev Internal function to transfer rewards and kick the auction.
+    /// @param _amount The amount of reward tokens to transfer.
     function _kick(uint256 _amount) internal {
         REWARD_TOKEN.transfer(auction, _amount);
         Auction(auction).kick(address(REWARD_TOKEN));
     }
 
-    /**
-     * @notice Set the Uniswap V3 path
-     * @param _path Path, encoded for the Uni V3 router
-     */
+    /// @notice Swaps a specific amount of `_from` to `_to`.
+    /// @param _path Path for swap execution (encoded for Uni V3 router)
+    /// @param _amountIn The amount of `_from` we will swap.
+    /// @param _minAmountOut The min of `_to` to get out.
+    /// @return _amountOut The actual amount of `_to` that was swapped to
+    function _swapFrom(bytes memory _path, uint256 _amountIn, uint256 _minAmountOut)
+        internal
+        returns (uint256 _amountOut)
+    {
+        _amountOut = ISwapRouter(UNI_V3_ROUTER).exactInput(
+            ISwapRouter.ExactInputParams(_path, address(this), block.timestamp, _amountIn, _minAmountOut)
+        );
+    }
+
+    /// @notice Sets the Uniswap V3 path
+    /// @param _path Path, encoded for the Uni V3 router
     function setUniV3Path(bytes calldata _path) external onlyManagement {
         uniV3Path = _path;
     }
 
-    /**
-     * @notice Set the minimum amount of rewardsToken to sell
-     * @param _minAmountToSell minimum amount to sell in wei
-     */
+    /// @notice Sets the minimum amount of rewardsToken to sell
+    /// @param _minAmountToSell minimum amount to sell in wei
     function setMinAmountToSell(uint256 _minAmountToSell) external onlyManagement {
         minAmountToSell = _minAmountToSell;
     }
 
+    /// @notice Sets whether deposits are open to everyone.
+    /// @param _openDeposits Boolean indicating if deposits are open.
     function setOpenDeposits(bool _openDeposits) external onlyManagement {
         openDeposits = _openDeposits;
     }
 
+    /// @notice Sets whether a specific depositor is allowed to deposit.
+    /// @param _depositor The address of the depositor.
+    /// @param _allowed Boolean indicating if the depositor is allowed.
     function setAllowed(address _depositor, bool _allowed) external onlyManagement {
         allowed[_depositor] = _allowed;
     }
 
+    /// @notice Sets the auction contract address.
+    /// @param _auction The address of the auction contract.
     function setAuction(address _auction) external onlyManagement {
         if (_auction != address(0)) {
             require(Auction(_auction).receiver() == address(this), "receiver");
@@ -204,29 +211,37 @@ contract LockstakeCumpounder is BaseHealthCheck {
         auction = _auction;
     }
 
+    /// @notice Sets whether to use the auction for selling rewards.
+    /// @param _useAuction Boolean indicating if the auction should be used.
     function setUseAuction(bool _useAuction) external onlyManagement {
         if (_useAuction) require(auction != address(0), "!auction");
         useAuction = _useAuction;
     }
 
-    /**
-     * @notice Set the referral code for staking.
-     * @param _referral uint16 referral code
-     */
+    /// @notice Sets the referral code for staking.
+    /// @param _referral uint16 referral code
     function setReferral(uint16 _referral) external onlyManagement {
         referral = _referral;
     }
 
+    /// @notice Sets the vote delegate for the URN.
+    /// @param _voteDelegate The address of the vote delegate.
     function setVoteDelegate(address _voteDelegate) external onlyManagement {
         voteDelegate = _voteDelegate;
 
         LOCK_STAKE_ENGINE.selectVoteDelegate(address(this), URN_INDEX, voteDelegate);
     }
 
+    /// @dev Returns the minimum of two unsigned integers.
+    /// @param a The first unsigned integer.
+    /// @param b The second unsigned integer.
+    /// @return The smaller of the two integers.
     function _min(uint256 a, uint256 b) internal pure returns (uint256) {
         return a < b ? a : b;
     }
 
+    /// @dev Internal function to handle emergency withdrawals.
+    /// @param _amount The amount to withdraw.
     function _emergencyWithdraw(uint256 _amount) internal override {
         _amount = _min(_amount, balanceOfStake());
         _freeFunds(_amount);
