@@ -56,7 +56,7 @@ contract LockstakeCumpounder is BaseHealthCheck {
 
     mapping(address => bool) public allowed;
 
-    constructor(address _lockstakeEngine, address _farm) BaseHealthCheck(address(SKY), "Lockstake Cumpounder") {
+    constructor(address _lockstakeEngine, address _farm, string memory _name) BaseHealthCheck(address(SKY), _name) {
         LOCK_STAKE_ENGINE = ILockstakeEngine(_lockstakeEngine);
         FARM = IStaking(_farm);
 

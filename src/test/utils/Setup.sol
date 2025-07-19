@@ -5,7 +5,7 @@ import "forge-std/console2.sol";
 import {Test} from "forge-std/Test.sol";
 
 import {LockstakeCumpounder, ERC20} from "../../LockstakeCumpounder.sol";
-// import {StrategyFactory} from "../../StrategyFactory.sol";
+import {LockstakeCumpounderFactory} from "../../LockstakeCumpounderFactory.sol";
 import {IStrategyInterface} from "../../interfaces/IStrategyInterface.sol";
 
 // Inherit the events so they can be checked if desired.
@@ -24,7 +24,7 @@ contract Setup is Test, IEvents {
     ERC20 public asset;
     IStrategyInterface public strategy;
 
-    // StrategyFactory public strategyFactory;
+    LockstakeCumpounderFactory public strategyFactory;
     address public lockstakeEngine = 0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3; // LOCKSTAKE_ENGINE
     address public farm = 0x99cBC0e4E6427F6939536eD24d1275B95ff77404; // REWARDS_LSSKY_SPK
 
@@ -60,12 +60,12 @@ contract Setup is Test, IEvents {
         // Set decimals
         decimals = asset.decimals();
 
-        // strategyFactory = new StrategyFactory(
-        //     management,
-        //     performanceFeeRecipient,
-        //     keeper,
-        //     emergencyAdmin
-        // );
+        strategyFactory = new LockstakeCumpounderFactory(
+            management,
+            performanceFeeRecipient,
+            keeper,
+            emergencyAdmin
+        );
 
         // Deploy strategy and set variables
         strategy = IStrategyInterface(setUpStrategy());
@@ -82,15 +82,6 @@ contract Setup is Test, IEvents {
     }
 
     function setUpStrategy() public returns (address) {
-        // we save the strategy as a IStrategyInterface to give it the needed interface
-        IStrategyInterface _strategy = IStrategyInterface(address(new LockstakeCumpounder(lockstakeEngine, farm)));
-
-        _strategy.setPendingManagement(management);
-        _strategy.setKeeper(keeper);
-        _strategy.setPerformanceFeeRecipient(performanceFeeRecipient);
-        _strategy.setEmergencyAdmin(emergencyAdmin);
-
-        _strategy.setMinAmountToSell(1000e18);
 
         bytes memory path = abi.encodePacked(
             tokenAddrs["SPK"], // tokenIn
@@ -102,12 +93,17 @@ contract Setup is Test, IEvents {
             tokenAddrs["SKY"] // tokenOut
         );
 
-        _strategy.setUniV3Path(path);
+        // we save the strategy as a IStrategyInterface to give it the needed interface
+        IStrategyInterface _strategy = IStrategyInterface(address(strategyFactory.newStrategy(farm, "Lockstake SKY-SPK", path)));
 
-        _strategy.setOpenDeposits(true);
-
-        vm.prank(management);
+        vm.startPrank(management);
         _strategy.acceptManagement();
+
+        _strategy.setMinAmountToSell(1000e18);
+
+        _strategy.setOpenDeposits(true);        
+
+        vm.stopPrank();
 
         return address(_strategy);
     }
