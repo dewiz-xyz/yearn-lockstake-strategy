@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 import "forge-std/console2.sol";
 import {Test} from "forge-std/Test.sol";
 
-import {LockstakeCumpounder, ERC20} from "../../LockstakeCumpounder.sol";
+import {LockstakeCumpounder, ERC20, Hop, Dex} from "../../LockstakeCumpounder.sol";
 import {LockstakeCumpounderFactory} from "../../LockstakeCumpounderFactory.sol";
 import {IStrategyInterface} from "../../interfaces/IStrategyInterface.sol";
 
@@ -77,15 +77,10 @@ contract Setup is Test, IEvents {
     }
 
     function setUpStrategy() public returns (address) {
-        bytes memory path = abi.encodePacked(
-            tokenAddrs["SPK"], // tokenIn
-            uint24(100), // 0.01%
-            tokenAddrs["USDC"],
-            uint24(100), // 0.01%
-            tokenAddrs["WETH"],
-            uint24(3000), // 0.3%
-            tokenAddrs["SKY"] // tokenOut
-        );
+        Hop[] memory path = new Hop[](3);
+        path[0] = Hop(Dex.UniV3, tokenAddrs["SPK"], tokenAddrs["USDC"], 100);
+        path[1] = Hop(Dex.Psm, tokenAddrs["USDC"], tokenAddrs["USDS"], 0);
+        path[2] = Hop(Dex.UniV2, tokenAddrs["USDS"], tokenAddrs["SKY"], 0);
 
         // we save the strategy as a IStrategyInterface to give it the needed interface
         IStrategyInterface _strategy =

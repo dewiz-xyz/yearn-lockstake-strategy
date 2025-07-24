@@ -7,6 +7,7 @@ import {ISwapRouter} from "@periphery/interfaces/Uniswap/V3/ISwapRouter.sol";
 import {ILockstakeEngine} from "./interfaces/ILockstakeEngine.sol";
 import {IStaking} from "./interfaces/IStaking.sol";
 import {Auction} from "@periphery/Auctions/Auction.sol";
+import {MultiSwapper, Hop, Dex} from "./periphery/MultiSwapper.sol";
 
 /// @title LockstakeCumpounder
 /// @notice A Yearn V3 TokenizedStrategy that (COIN is defined at deployment):
@@ -15,14 +16,11 @@ import {Auction} from "@periphery/Auctions/Auction.sol";
 ///         3) Periodically claims COIN rewards, swaps COIN→SKY, and re-locks SKY to compound.
 ///         4) Frees SKY on withdrawals.
 ///
-contract LockstakeCumpounder is BaseHealthCheck {
+contract LockstakeCumpounder is BaseHealthCheck, MultiSwapper {
     using SafeERC20 for ERC20;
 
     /// @notice Which URN index we use for this strategy (we fix to 0).
     uint256 public constant URN_INDEX = 0;
-
-    /// @notice Uniswap V3 router address for swapping REWARD_TOKEN → SKY.
-    address private constant UNI_V3_ROUTER = 0xE592427A0AEce92De3Edee1F18E0157C05861564; // Uniswap V3 router on Mainnet
 
     /// @notice The SKY governance token (ERC20) that the Vault holds.
     ERC20 public constant SKY = ERC20(0x56072C95FAA701256059aa122697B133aDEd9279);
@@ -50,9 +48,6 @@ contract LockstakeCumpounder is BaseHealthCheck {
     bool public useAuction;
 
     bool public openDeposits;
-
-    /// @notice Path to be used when swapping REWARD_TOKEN → SKY, as encoded for the Uni V3 router: abi.encodePacked(address from, uint24 pairFee, address 1st hop ... address to)
-    bytes public uniV3Path;
 
     mapping(address => bool) public allowed;
 
@@ -103,7 +98,7 @@ contract LockstakeCumpounder is BaseHealthCheck {
             if (useAuction) {
                 _kick(balance);
             } else {
-                _swapFrom(uniV3Path, balance, 0);
+                _swapFrom(balance, 0);
             }
         }
 
@@ -162,24 +157,10 @@ contract LockstakeCumpounder is BaseHealthCheck {
         Auction(auction).kick(address(REWARD_TOKEN));
     }
 
-    /// @notice Swaps a specific amount of `_from` to `_to`.
-    /// @param _path Path for swap execution (encoded for Uni V3 router)
-    /// @param _amountIn The amount of `_from` we will swap.
-    /// @param _minAmountOut The min of `_to` to get out.
-    /// @return _amountOut The actual amount of `_to` that was swapped to
-    function _swapFrom(bytes memory _path, uint256 _amountIn, uint256 _minAmountOut)
-        internal
-        returns (uint256 _amountOut)
-    {
-        _amountOut = ISwapRouter(UNI_V3_ROUTER).exactInput(
-            ISwapRouter.ExactInputParams(_path, address(this), block.timestamp, _amountIn, _minAmountOut)
-        );
-    }
-
-    /// @notice Sets the Uniswap V3 path
-    /// @param _path Path, encoded for the Uni V3 router
-    function setUniV3Path(bytes calldata _path) external onlyManagement {
-        uniV3Path = _path;
+    /// @notice Sets the MultiSwapper path
+    /// @param _path Path
+    function setSwapPath(Hop[] calldata _path) external onlyManagement {
+        _setSwapPath(_path);
     }
 
     /// @notice Sets the minimum amount of rewardsToken to sell

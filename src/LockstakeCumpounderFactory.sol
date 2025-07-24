@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.18;
 
-import {LockstakeCumpounder, ERC20} from "./LockstakeCumpounder.sol";
+import {LockstakeCumpounder, Hop} from "./LockstakeCumpounder.sol";
 import {IStrategyInterface} from "./interfaces/IStrategyInterface.sol";
 
 contract LockstakeCumpounderFactory {
@@ -34,10 +34,10 @@ contract LockstakeCumpounderFactory {
      * @notice Deploy a new Strategy.
      * @param _farm The lockstake farm to be used by the strategy
      * @param _name The name of the new strategy.
-     * @param _path The Uniswap V3 path for swapping rewards.
+     * @param _path The MultiSwapper path for swapping rewards.
      * @return The address of the new strategy.
      */
-    function newStrategy(address _farm, string calldata _name, bytes calldata _path)
+    function newStrategy(address _farm, string calldata _name, Hop[] calldata _path)
         external
         virtual
         returns (address)
@@ -50,7 +50,7 @@ contract LockstakeCumpounderFactory {
 
         _newStrategy.setKeeper(keeper);
 
-        _newStrategy.setUniV3Path(_path);
+        _newStrategy.setSwapPath(_path);
 
         _newStrategy.setPendingManagement(management);
 

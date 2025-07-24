@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Script} from "forge-std/Script.sol";
-import {LockstakeCumpounder} from "../src/LockstakeCumpounder.sol";
+import {LockstakeCumpounder, Hop, Dex} from "../src/LockstakeCumpounder.sol";
 import {LockstakeCumpounderFactory} from "../src/LockstakeCumpounderFactory.sol";
 import {console} from "forge-std/console.sol";
 import {IStrategyInterface} from "../src/interfaces/IStrategyInterface.sol";
@@ -20,6 +20,7 @@ contract Deploy is Script {
     address public constant SPK = 0xc20059e0317DE91738d13af027DfC4a50781b066;
     address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address public constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    address public constant USDS = 0xdC035D45d973E3EC169d2276DDab16f1e407384F;
 
     function run() public {
         vm.startBroadcast();
@@ -31,15 +32,10 @@ contract Deploy is Script {
 
         console.log("LockstakeCumpounderFactory deployed to:", address(factory));
 
-        bytes memory path = abi.encodePacked(
-            SPK, // tokenIn
-            uint24(100), // 0.01%
-            USDC,
-            uint24(100), // 0.01%
-            WETH,
-            uint24(3000), // 0.3%
-            SKY // tokenOut
-        );
+        Hop[] memory path = new Hop[](3);
+        path[0] = Hop(Dex.UniV3, SPK, USDC, 100);
+        path[1] = Hop(Dex.Psm, USDC, USDS, 0);
+        path[2] = Hop(Dex.UniV2, USDS, SKY, 0);
 
         address strategy = factory.newStrategy(REWARDS_LSSKY_SPK, "Lockstake SKY-SPK", path);
         console.log("Lockstake SKY-SPK deployed to:", strategy);

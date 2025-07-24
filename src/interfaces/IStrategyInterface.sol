@@ -2,6 +2,7 @@
 pragma solidity ^0.8.18;
 
 import {IBaseHealthCheck} from "@periphery/Bases/HealthCheck/IBaseHealthCheck.sol";
+import {Hop} from "../periphery/MultiSwapper.sol";
 
 interface IStrategyInterface is IBaseHealthCheck {
     function SKY() external view returns (address);
@@ -32,13 +33,17 @@ interface IStrategyInterface is IBaseHealthCheck {
 
     function balanceOfStake() external view returns (uint256);
 
+    function tend() external;
+
+    function kick() external;
+
     function setReferral(uint16 _referral) external;
 
     function setVoteDelegate(address _voteDelegate) external;
 
     function voteDelegate() external view returns (address);
 
-    function setUniV3Path(bytes calldata _path) external;
+    function setSwapPath(Hop[] calldata _path) external;
 
     function setMinAmountToSell(uint256 _minAmountToSell) external;
 
