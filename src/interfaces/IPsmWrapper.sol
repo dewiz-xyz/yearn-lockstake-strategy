@@ -6,4 +6,6 @@ interface IPsmWrapper {
     function buyGem(address, uint256) external returns (uint256);
     function usds() external view returns (address);
     function gem() external view returns (address);
+    function tin() external view returns (uint256);
+    function tout() external view returns (uint256);
 }
