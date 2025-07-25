@@ -64,9 +64,6 @@ contract LockstakeCumpounder is BaseHealthCheck, MultiSwapper {
         // Approve SKY → LockstakeEngine for unlimited locking.
         SKY.forceApprove(_lockstakeEngine, type(uint256).max);
 
-        // Approve REWARD_TOKEN → UniswapV2 Router for unlimited swapping.
-        REWARD_TOKEN.forceApprove(UNI_V3_ROUTER, type(uint256).max);
-
         // 1) Open URN #0 for this strategy address.
         URN = LOCK_STAKE_ENGINE.open(URN_INDEX);
 
