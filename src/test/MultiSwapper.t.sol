@@ -41,7 +41,7 @@ contract MultiSwapperTest is Test {
 
     function setUp() public {
         multiSwapper = new MockMultiSwapper();
-        
+
         vm.label(address(multiSwapper), "MultiSwapper");
         vm.label(WETH, "WETH");
         vm.label(DAI, "DAI");
@@ -53,19 +53,19 @@ contract MultiSwapperTest is Test {
 
     function test_UniV2Swap(uint256 amount) public {
         vm.assume(amount >= minFuzzAmount && amount <= maxFuzzAmount);
-        
+
         Hop[] memory path = new Hop[](1);
         path[0] = Hop(Dex.UniV2, WETH, DAI, 0);
-        
+
         multiSwapper.setSwapPath(path);
-        
+
         deal(WETH, address(multiSwapper), amount);
-        
+
         assertEq(ERC20(WETH).balanceOf(address(multiSwapper)), amount, "Initial WETH balance incorrect");
         assertEq(ERC20(DAI).balanceOf(address(multiSwapper)), 0, "Initial DAI balance should be 0");
-        
+
         uint256 amountOut = multiSwapper.swapFrom(amount, 0);
-        
+
         assertEq(ERC20(WETH).balanceOf(address(multiSwapper)), 0, "WETH should be fully swapped");
         assertEq(ERC20(DAI).balanceOf(address(multiSwapper)), amountOut, "DAI balance should match amountOut");
         assertGt(amountOut, 0, "Should have received DAI");
@@ -73,19 +73,19 @@ contract MultiSwapperTest is Test {
 
     function test_UniV3Swap(uint256 amount) public {
         amount = bound(amount, 1e16, 1e20);
-        
+
         Hop[] memory path = new Hop[](1);
         path[0] = Hop(Dex.UniV3, WETH, DAI, 3000);
-        
+
         multiSwapper.setSwapPath(path);
-        
+
         deal(WETH, address(multiSwapper), amount);
-        
+
         assertEq(ERC20(WETH).balanceOf(address(multiSwapper)), amount, "Initial WETH balance incorrect");
         assertEq(ERC20(DAI).balanceOf(address(multiSwapper)), 0, "Initial DAI balance should be 0");
-        
+
         uint256 amountOut = multiSwapper.swapFrom(amount, 0);
-        
+
         assertEq(ERC20(WETH).balanceOf(address(multiSwapper)), 0, "WETH should be fully swapped");
         assertEq(ERC20(DAI).balanceOf(address(multiSwapper)), amountOut, "DAI balance should match amountOut");
         assertGt(amountOut, 0, "Should have received DAI");
@@ -93,19 +93,19 @@ contract MultiSwapperTest is Test {
 
     function test_PsmSwap(uint256 amount) public {
         amount = bound(amount, 1e4, 1e12);
-        
+
         Hop[] memory path = new Hop[](1);
         path[0] = Hop(Dex.Psm, USDC, USDS, 0);
-        
+
         multiSwapper.setSwapPath(path);
-        
+
         deal(USDC, address(multiSwapper), amount);
-        
+
         assertEq(ERC20(USDC).balanceOf(address(multiSwapper)), amount, "Initial USDC balance incorrect");
         assertEq(ERC20(USDS).balanceOf(address(multiSwapper)), 0, "Initial USDS balance should be 0");
-        
+
         uint256 amountOut = multiSwapper.swapFrom(amount, 0);
-        
+
         assertEq(ERC20(USDC).balanceOf(address(multiSwapper)), 0, "USDC should be fully swapped");
         assertEq(ERC20(USDS).balanceOf(address(multiSwapper)), amountOut, "USDS balance should match amountOut");
         assertGt(amountOut, 0, "Should have received USDS");
@@ -113,19 +113,19 @@ contract MultiSwapperTest is Test {
 
     function test_PsmSwapReverse(uint256 amount) public {
         amount = bound(amount, 1e16, 1e20);
-        
+
         Hop[] memory path = new Hop[](1);
         path[0] = Hop(Dex.Psm, USDS, USDC, 0);
-        
+
         multiSwapper.setSwapPath(path);
-        
+
         deal(USDS, address(multiSwapper), amount);
-        
+
         assertEq(ERC20(USDS).balanceOf(address(multiSwapper)), amount, "Initial USDS balance incorrect");
         assertEq(ERC20(USDC).balanceOf(address(multiSwapper)), 0, "Initial USDC balance should be 0");
-        
+
         uint256 amountOut = multiSwapper.swapFrom(amount, 0);
-        
+
         assertLt(ERC20(USDS).balanceOf(address(multiSwapper)), 1e12, "USDS should be fully swapped"); // values under 1e12 are leftover due to precision loss.
         assertEq(ERC20(USDC).balanceOf(address(multiSwapper)), amountOut, "USDC balance should match amountOut");
         assertGt(amountOut, 0, "Should have received USDC");
@@ -133,41 +133,41 @@ contract MultiSwapperTest is Test {
 
     function test_MkrSkySwap(uint256 amount) public {
         amount = bound(amount, 1e16, 1e22);
-        
+
         Hop[] memory path = new Hop[](1);
         path[0] = Hop(Dex.MkrSky, MKR, SKY, 0);
-        
+
         multiSwapper.setSwapPath(path);
-        
+
         deal(MKR, address(multiSwapper), amount);
-        
+
         assertEq(ERC20(MKR).balanceOf(address(multiSwapper)), amount, "Initial MKR balance incorrect");
         assertEq(ERC20(SKY).balanceOf(address(multiSwapper)), 0, "Initial SKY balance should be 0");
-        
+
         uint256 amountOut = multiSwapper.swapFrom(amount, 0);
-        
+
         assertEq(ERC20(MKR).balanceOf(address(multiSwapper)), 0, "MKR should be fully swapped");
         assertGt(ERC20(SKY).balanceOf(address(multiSwapper)), 0, "Should have received SKY");
         assertEq(ERC20(SKY).balanceOf(address(multiSwapper)), amountOut, "SKY balance should match amountOut");
     }
 
     function test_MultiHopSwap() public {
-        uint256 amount = 50 * 10**18;
-        
+        uint256 amount = 50 * 10 ** 18;
+
         Hop[] memory path = new Hop[](2);
         path[0] = Hop(Dex.UniV3, WETH, USDC, 500);
         path[1] = Hop(Dex.Psm, USDC, USDS, 0);
-        
+
         multiSwapper.setSwapPath(path);
-        
+
         deal(WETH, address(multiSwapper), amount);
-        
+
         assertEq(ERC20(WETH).balanceOf(address(multiSwapper)), amount, "Initial WETH balance incorrect");
         assertEq(ERC20(USDC).balanceOf(address(multiSwapper)), 0, "Initial USDC balance should be 0");
         assertEq(ERC20(USDS).balanceOf(address(multiSwapper)), 0, "Initial USDS balance should be 0");
-        
+
         uint256 amountOut = multiSwapper.swapFrom(amount, 0);
-        
+
         assertEq(ERC20(WETH).balanceOf(address(multiSwapper)), 0, "WETH should be fully swapped");
         assertEq(ERC20(USDC).balanceOf(address(multiSwapper)), 0, "USDC should be fully swapped");
         assertEq(ERC20(USDS).balanceOf(address(multiSwapper)), amountOut, "USDS balance should match amountOut");
@@ -177,27 +177,27 @@ contract MultiSwapperTest is Test {
     function test_MinimumOutputRequirement() public {
         Hop[] memory path = new Hop[](1);
         path[0] = Hop(Dex.UniV3, DAI, WETH, 3000);
-        
+
         multiSwapper.setSwapPath(path);
 
-        uint256 amount = 1000 * 10**18;
-        
+        uint256 amount = 1000 * 10 ** 18;
+
         deal(DAI, address(multiSwapper), amount);
-        
+
         vm.expectRevert("minAmountOut not reached");
         multiSwapper.swapFrom(amount, amount);
     }
 
     function test_InvalidPsmPath(uint256 amount) public {
         vm.assume(amount >= minFuzzAmount && amount <= maxFuzzAmount);
-        
+
         Hop[] memory path = new Hop[](1);
         path[0] = Hop(Dex.Psm, WETH, DAI, 0);
-        
+
         multiSwapper.setSwapPath(path);
-        
+
         deal(WETH, address(multiSwapper), amount);
-        
+
         vm.expectRevert("invalid PSM hop");
         multiSwapper.swapFrom(amount, 0);
     }

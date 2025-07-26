@@ -93,7 +93,9 @@ contract MultiSwapper {
         _path[0] = _from;
         _path[1] = _to;
 
-        uint256[] memory amounts = IUniswapV2Router02(UNI_V2_ROUTER).swapExactTokensForTokens(_amountIn, 0, _path, address(this), block.timestamp); // todo: amountOut
+        uint256[] memory amounts = IUniswapV2Router02(UNI_V2_ROUTER).swapExactTokensForTokens(
+            _amountIn, 0, _path, address(this), block.timestamp
+        ); // todo: amountOut
         _amountOut = amounts[1];
     }
 
@@ -122,15 +124,12 @@ contract MultiSwapper {
      * @param _amountIn The amount of `_from` we will swap.
      * @return _amountOut The actual amount of `_to` that was swapped to
      */
-    function _mkrSkySwapFrom(uint256 _amountIn)
-        private
-        returns (uint256 _amountOut)
-    {
+    function _mkrSkySwapFrom(uint256 _amountIn) private returns (uint256 _amountOut) {
         IMkrSky(MKR_SKY).mkrToSky(address(this), _amountIn);
-        
+
         uint256 rate = IMkrSky(MKR_SKY).rate();
         uint256 fee = IMkrSky(MKR_SKY).fee();
-        
+
         _amountOut = (_amountIn * rate);
         if (fee > 0) {
             _amountOut = _amountOut - ((_amountOut * fee) / WAD);
@@ -145,10 +144,7 @@ contract MultiSwapper {
      * @param _amountIn The amount of `_from` we will swap.
      * @return _amountOut The actual amount of `_to` that was swapped to
      */
-    function _psmSwapFrom(address _from, address _to, uint256 _amountIn)
-        private
-        returns (uint256 _amountOut)
-    {
+    function _psmSwapFrom(address _from, address _to, uint256 _amountIn) private returns (uint256 _amountOut) {
         IPsmWrapper psm = IPsmWrapper(PSM_WRAPPER);
 
         if (_from == USDS && _to == USDC) {
@@ -168,9 +164,9 @@ contract MultiSwapper {
      * @param _path Path
      */
     function _setSwapPath(Hop[] memory _path) internal {
-        delete path; 
+        delete path;
 
-        for (uint i = 0; i < _path.length; i++) {
+        for (uint256 i = 0; i < _path.length; i++) {
             Hop memory hop = _path[i];
             if (hop.dex == Dex.UniV2) {
                 ERC20(hop.from).forceApprove(UNI_V2_ROUTER, type(uint256).max);
@@ -182,5 +178,5 @@ contract MultiSwapper {
 
             path.push(_path[i]);
         }
-    }    
+    }
 }

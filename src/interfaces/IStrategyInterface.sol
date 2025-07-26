@@ -45,6 +45,8 @@ interface IStrategyInterface is IBaseHealthCheck {
 
     function setSwapPath(Hop[] calldata _path) external;
 
+    function getSwapPath() external view returns (Hop[] memory);
+
     function setMinAmountToSell(uint256 _minAmountToSell) external;
 
     function setOpenDeposits(bool _openDeposits) external;

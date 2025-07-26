@@ -15,7 +15,7 @@ contract LockstakeCumpounderFactory {
     address public keeper;
 
     address public lockstakeEngine = 0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3;
-    
+
     /// @notice Track the deployments. asset => pool => strategy
     mapping(address => address) public deployments;
 
@@ -32,7 +32,7 @@ contract LockstakeCumpounderFactory {
         performanceFeeRecipient = _performanceFeeRecipient;
         keeper = _keeper;
         emergencyAdmin = _emergencyAdmin;
-        
+
         // Set default implementation bytecode to current LockstakeCumpounder
         implementationBytecode = type(LockstakeCumpounder).creationCode;
     }
@@ -50,24 +50,24 @@ contract LockstakeCumpounderFactory {
         returns (address)
     {
         require(implementationBytecode.length > 0, "Implementation bytecode not set");
-        
+
         // Encode constructor arguments
         bytes memory constructorArgs = abi.encode(lockstakeEngine, _farm, _name);
-        
+
         // Combine bytecode with constructor arguments
         bytes memory deploymentBytecode = abi.encodePacked(implementationBytecode, constructorArgs);
-        
+
         // Generate deterministic salt based on farm and current timestamp
         bytes32 salt = keccak256(abi.encodePacked(_farm, _name, block.timestamp, msg.sender));
-        
+
         // Deploy using CREATE2
         address strategy;
         assembly {
             strategy := create2(0, add(deploymentBytecode, 0x20), mload(deploymentBytecode), salt)
         }
-        
+
         require(strategy != address(0), "Strategy deployment failed");
-        
+
         // tokenized strategies available setters.
         IStrategyInterface _newStrategy = IStrategyInterface(strategy);
 
@@ -118,9 +118,9 @@ contract LockstakeCumpounderFactory {
     function setImplementationBytecode(bytes calldata _bytecode) external {
         require(msg.sender == management, "!management");
         require(_bytecode.length > 0, "Invalid bytecode");
-        
+
         implementationBytecode = _bytecode;
-        
+
         emit ImplementationBytecodeUpdated(keccak256(_bytecode));
     }
 

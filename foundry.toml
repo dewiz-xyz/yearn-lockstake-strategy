@@ -4,11 +4,18 @@ out = 'out'
 libs = ['lib']
 solc = "0.8.23"
 
+auto_detect_solc = true
+
 remappings = [
     "@openzeppelin/=lib/openzeppelin-contracts/",
     "forge-std/=lib/forge-std/src/",
     "@tokenized-strategy/=lib/tokenized-strategy/src/",
     "@periphery/=lib/tokenized-strategy-periphery/src/",
+    "@uniswap-v3-core/=lib/v3-core/contracts/",
 ]
+
+[[profile.default.solc_version]]
+files = ["lib/v3-core/contracts/**/*.sol"]
+version = "0.7.6"
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config

@@ -8,10 +8,10 @@ interface IMkrSky {
     function file(bytes32 what, uint256 data) external;
     function collect(address to) external returns (uint256);
     function burn(uint256 skyAmt) external;
-    
+
     // Public functions
     function mkrToSky(address usr, uint256 mkrAmt) external;
-    
+
     // View functions
     function wards(address) external view returns (uint256);
     function fee() external view returns (uint256);

@@ -160,6 +160,12 @@ contract LockstakeCumpounder is BaseHealthCheck, MultiSwapper {
         _setSwapPath(_path);
     }
 
+    /// @notice Gets the current MultiSwapper path
+    /// @return The current swap path
+    function getSwapPath() external view returns (Hop[] memory) {
+        return path;
+    }
+
     /// @notice Sets the minimum amount of rewardsToken to sell
     /// @param _minAmountToSell minimum amount to sell in wei
     function setMinAmountToSell(uint256 _minAmountToSell) external onlyManagement {
