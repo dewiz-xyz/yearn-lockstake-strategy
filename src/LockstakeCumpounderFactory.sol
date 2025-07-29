@@ -16,7 +16,7 @@ contract LockstakeCumpounderFactory {
 
     address public lockstakeEngine = 0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3;
 
-    /// @notice Track the deployments. asset => pool => strategy
+    /// @notice Track the deployments. farm => strategy
     mapping(address => address) public deployments;
 
     /// @notice The implementation contract bytecode used for CREATE2 deployment
@@ -109,8 +109,8 @@ contract LockstakeCumpounderFactory {
     /// @param _strategy The address of the strategy to check.
     /// @return A boolean indicating if the strategy is deployed by this factory.
     function isDeployedStrategy(address _strategy) external view returns (bool) {
-        address _asset = IStrategyInterface(_strategy).asset();
-        return deployments[_asset] == _strategy;
+        address _farm = IStrategyInterface(_strategy).FARM();
+        return deployments[_farm] == _strategy;
     }
 
     /// @notice Updates the implementation bytecode used for new strategy deployments.

@@ -95,7 +95,7 @@ contract MultiSwapper {
 
         uint256[] memory amounts = IUniswapV2Router02(UNI_V2_ROUTER).swapExactTokensForTokens(
             _amountIn, 0, _path, address(this), block.timestamp
-        ); // todo: amountOut
+        );
         _amountOut = amounts[1];
     }
 
