@@ -36,19 +36,25 @@ contract LockstakeCumpounder is BaseHealthCheck, MultiSwapper {
 
     address public immutable URN;
 
-    ///@notice yearn's referral code
+    /// @notice Yearn's referral code.
     uint16 public referral = 1007;
 
+    /// @notice Delegate that can use the voting power of the staked SKY.
     address public voteDelegate;
 
-    uint256 public minAmountToSell = 1000e18;
+    /// @notice Minimum amount to sell (avoid selling dust)
+    uint256 public minAmountToSell = 10_000 * 10**18;
 
+    /// @notice Address of auction contract
     address public auction;
 
+    /// @notice Boolean, strategy will rely on auctions if true, will swap if false
     bool public useAuction;
 
+    /// @notice Indicates whether deposits are open
     bool public openDeposits;
 
+    /// @notice Allowlist if deposits are closed.
     mapping(address => bool) public allowed;
 
     /// @notice Initializes the contract with the given parameters.
@@ -83,9 +89,9 @@ contract LockstakeCumpounder is BaseHealthCheck, MultiSwapper {
         LOCK_STAKE_ENGINE.free(address(this), URN_INDEX, address(this), assets);
     }
 
-    // NOTE: If useAuction is true, we will use the auction to sell the REWARD_TOKEN rewards.
-    //  If useAuction is false, we will swap the REWARD_TOKEN rewards to SKY through UniswapV2 and needs a private relay
     /// @dev  Harvests rewards and reports the total assets under management.
+    ///  If useAuction is true, we will use the auction to sell the REWARD_TOKEN rewards.
+    ///  If useAuction is false, we will swap the REWARD_TOKEN rewards to SKY through the MultiSwapper route.    
     /// @return _totalAssets The total assets under management.
     function _harvestAndReport() internal override returns (uint256 _totalAssets) {
         LOCK_STAKE_ENGINE.getReward(address(this), URN_INDEX, address(FARM), address(this));

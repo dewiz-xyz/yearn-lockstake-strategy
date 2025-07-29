@@ -11,20 +11,20 @@ interface ILockstakeEngine {
     /// @notice Selects which farm to stake this URN’s entire SKY into.
     /// @param owner  The address owning the URN.
     /// @param index  The URN index for that owner.
-    /// @param farm   The farm contract address (e.g. USDS‐farm).
+    /// @param farm   The farm contract address (e.g. USDS-farm).
     /// @param ref    A ref code (usually 0).
     function selectFarm(address owner, uint256 index, address farm, uint16 ref) external;
 
     function selectVoteDelegate(address owner, uint256 index, address voteDelegate) external;
 
-    /// @notice Locks `wad` amount of SKY for the `owner`’s `index`­th URN, staking it to the previously‐selected farm.
+    /// @notice Locks `wad` amount of SKY for the `owner`’s `index`­th URN, staking it to the previously-selected farm.
     /// @param owner  The address owning the URN.
     /// @param index  The URN index.
     /// @param wad    The amount of SKY (in wei) to lock & stake.
     /// @param ref    A ref code passed to the farm when staking (e.g. 0).
     function lock(address owner, uint256 index, uint256 wad, uint16 ref) external;
 
-    /// @notice Frees (unlocks & unstakes) `wad` amount of SKY from the `owner`’s `index`­th URN, sending it (minus exit fee) to `to`.
+    /// @notice Frees (unlocks & unstakes) `wad` amount of SKY from the `owner`’s `index`­ URN, sending it (minus exit fee) to `to`.
     /// @param owner  The address owning the URN.
     /// @param index  The URN index.
     /// @param to     The recipient of freed SKY.

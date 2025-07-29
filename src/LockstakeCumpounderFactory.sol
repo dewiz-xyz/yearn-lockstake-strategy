@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0
+// SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.18;
 
 import {LockstakeCumpounder, Hop} from "./LockstakeCumpounder.sol";
@@ -68,7 +68,6 @@ contract LockstakeCumpounderFactory {
 
         require(strategy != address(0), "Strategy deployment failed");
 
-        // tokenized strategies available setters.
         IStrategyInterface _newStrategy = IStrategyInterface(strategy);
 
         _newStrategy.setPerformanceFeeRecipient(performanceFeeRecipient);
@@ -83,6 +82,7 @@ contract LockstakeCumpounderFactory {
 
         emit NewStrategy(address(_newStrategy), _farm);
 
+        // Intentionally not checking if a strategy for a farm has already been deployed, allowing for redeployments of newer implementations. 
         deployments[_farm] = address(_newStrategy);
         return address(_newStrategy);
     }

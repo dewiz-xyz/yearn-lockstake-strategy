@@ -15,8 +15,6 @@ interface IStrategyInterface is IBaseHealthCheck {
 
     function URN() external view returns (address);
 
-    function UNI_V2_ROUTER() external view returns (address);
-
     function URN_INDEX() external view returns (uint256);
 
     function referral() external view returns (uint16);
