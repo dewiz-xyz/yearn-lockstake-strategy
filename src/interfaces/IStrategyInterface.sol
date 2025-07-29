@@ -21,8 +21,6 @@ interface IStrategyInterface is IBaseHealthCheck {
 
     function referral() external view returns (uint16);
 
-    function uniV3Path() external view returns (bytes memory);
-
     function minAmountToSell() external view returns (uint256);
 
     function openDeposits() external view returns (bool);
