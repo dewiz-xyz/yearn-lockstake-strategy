@@ -43,7 +43,7 @@ contract LockstakeCumpounder is BaseHealthCheck, MultiSwapper {
     address public voteDelegate;
 
     /// @notice Minimum amount to sell (avoid selling dust)
-    uint256 public minAmountToSell = 10_000 * 10**18;
+    uint256 public minAmountToSell = 10_000 * 10 ** 18;
 
     /// @notice Address of auction contract
     address public auction;
@@ -91,7 +91,7 @@ contract LockstakeCumpounder is BaseHealthCheck, MultiSwapper {
 
     /// @dev  Harvests rewards and reports the total assets under management.
     ///  If useAuction is true, we will use the auction to sell the REWARD_TOKEN rewards.
-    ///  If useAuction is false, we will swap the REWARD_TOKEN rewards to SKY through the MultiSwapper route.    
+    ///  If useAuction is false, we will swap the REWARD_TOKEN rewards to SKY through the MultiSwapper route.
     /// @return _totalAssets The total assets under management.
     function _harvestAndReport() internal override returns (uint256 _totalAssets) {
         LOCK_STAKE_ENGINE.getReward(address(this), URN_INDEX, address(FARM), address(this));

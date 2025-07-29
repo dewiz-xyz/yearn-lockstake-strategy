@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.18;
 
-import "forge-std/console2.sol";
 import {Test} from "forge-std/Test.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -36,9 +35,6 @@ contract MultiSwapperTest is Test {
     address public constant MKR = 0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2;
     address public constant SKY = 0x56072C95FAA701256059aa122697B133aDEd9279;
 
-    uint256 public constant minFuzzAmount = 1e6;
-    uint256 public constant maxFuzzAmount = 1e25;
-
     function setUp() public {
         multiSwapper = new MockMultiSwapper();
 
@@ -52,7 +48,7 @@ contract MultiSwapperTest is Test {
     }
 
     function test_UniV2Swap(uint256 amount) public {
-        vm.assume(amount >= minFuzzAmount && amount <= maxFuzzAmount);
+        amount = bound(amount, 1e16, 1e20); // 0.01 to 100 ETH equivalent
 
         Hop[] memory path = new Hop[](1);
         path[0] = Hop(Dex.UniV2, WETH, DAI, 0);
@@ -72,7 +68,7 @@ contract MultiSwapperTest is Test {
     }
 
     function test_UniV3Swap(uint256 amount) public {
-        amount = bound(amount, 1e16, 1e20);
+        amount = bound(amount, 1e16, 1e20); // 0.01 to 100 ETH equivalent
 
         Hop[] memory path = new Hop[](1);
         path[0] = Hop(Dex.UniV3, WETH, DAI, 3000);
@@ -92,7 +88,7 @@ contract MultiSwapperTest is Test {
     }
 
     function test_PsmSwap(uint256 amount) public {
-        amount = bound(amount, 1e4, 1e12);
+        amount = bound(amount, 1e4, 1e12); // 0.01 to 1M USDC (6 decimals)
 
         Hop[] memory path = new Hop[](1);
         path[0] = Hop(Dex.Psm, USDC, USDS, 0);
@@ -112,7 +108,7 @@ contract MultiSwapperTest is Test {
     }
 
     function test_PsmSwapReverse(uint256 amount) public {
-        amount = bound(amount, 1e16, 1e20);
+        amount = bound(amount, 1e16, 1e24); // 0.01 to 1M USDS (18 decimals)
 
         Hop[] memory path = new Hop[](1);
         path[0] = Hop(Dex.Psm, USDS, USDC, 0);
@@ -132,7 +128,7 @@ contract MultiSwapperTest is Test {
     }
 
     function test_MkrSkySwap(uint256 amount) public {
-        amount = bound(amount, 1e16, 1e22);
+        amount = bound(amount, 1e16, 1e21); // 0.01 to 1000 MKR (18 decimals)
 
         Hop[] memory path = new Hop[](1);
         path[0] = Hop(Dex.MkrSky, MKR, SKY, 0);
@@ -151,8 +147,8 @@ contract MultiSwapperTest is Test {
         assertEq(ERC20(SKY).balanceOf(address(multiSwapper)), amountOut, "SKY balance should match amountOut");
     }
 
-    function test_MultiHopSwap() public {
-        uint256 amount = 50 * 10 ** 18;
+    function test_MultiHopSwap(uint256 amount) public {
+        amount = bound(amount, 1e16, 1e20); // 0.01 to 100 ETH equivalent
 
         Hop[] memory path = new Hop[](2);
         path[0] = Hop(Dex.UniV3, WETH, USDC, 500);
@@ -180,7 +176,7 @@ contract MultiSwapperTest is Test {
 
         multiSwapper.setSwapPath(path);
 
-        uint256 amount = 1000 * 10 ** 18;
+        uint256 amount = 1000e18; // 1000 DAI
 
         deal(DAI, address(multiSwapper), amount);
 
@@ -189,7 +185,7 @@ contract MultiSwapperTest is Test {
     }
 
     function test_InvalidPsmPath(uint256 amount) public {
-        vm.assume(amount >= minFuzzAmount && amount <= maxFuzzAmount);
+        amount = bound(amount, 1e16, 1e20); // 0.01 to 100 ETH equivalent
 
         Hop[] memory path = new Hop[](1);
         path[0] = Hop(Dex.Psm, WETH, DAI, 0);

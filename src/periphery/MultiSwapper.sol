@@ -15,7 +15,7 @@ enum Dex {
     MkrSky
 }
 
-// @dev: 2 storage slots
+/// @dev 2 storage slots
 struct Hop {
     Dex dex;
     address from;
@@ -35,7 +35,7 @@ struct Hop {
 contract MultiSwapper {
     using SafeERC20 for ERC20;
 
-    // mainnet
+    /// @dev Mainnet addresses
     address public constant UNI_V2_ROUTER = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
     address public constant UNI_V3_ROUTER = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
     address public constant PSM_WRAPPER = 0xA188EEC8F81263234dA3622A406892F3D630f98c;
@@ -53,7 +53,7 @@ contract MultiSwapper {
     }
 
     /**
-     * @dev Used to swap a specific amount , using the storage path.
+     * @dev Used to swap a specific amount using the storage path. Uses the path array to define tokenFrom and tokenTo.
      *
      * @param _amountIn The amount of `_from` we will swap.
      * @param _minAmountOut The min of `_to` to get out.
@@ -87,6 +87,7 @@ contract MultiSwapper {
      * @param _from The token we are swapping from.
      * @param _to The token we are swapping to.
      * @param _amountIn The amount of `_from` we will swap.
+     * @return _amountOut The actual amount of `_to` that was swapped to
      */
     function _uniV2SwapFrom(address _from, address _to, uint256 _amountIn) private returns (uint256 _amountOut) {
         address[] memory _path = new address[](2);

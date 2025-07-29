@@ -82,7 +82,7 @@ contract LockstakeCumpounderFactory {
 
         emit NewStrategy(address(_newStrategy), _farm);
 
-        // Intentionally not checking if a strategy for a farm has already been deployed, allowing for redeployments of newer implementations. 
+        // Intentionally not checking if a strategy for a farm has already been deployed, allowing for redeployments of newer implementations.
         deployments[_farm] = address(_newStrategy);
         return address(_newStrategy);
     }
