@@ -177,7 +177,7 @@ contract LockstakeCumpounder is BaseHealthCheck, MultiSwapper {
     /// @dev Internal function to transfer rewards and kick the auction.
     /// @param _amount The amount of reward tokens to transfer.
     function _kick(uint256 _amount) internal {
-        REWARD_TOKEN.transfer(auction, _amount);
+        REWARD_TOKEN.safeTransfer(auction, _amount);
         Auction(auction).kick(address(REWARD_TOKEN));
     }
 
