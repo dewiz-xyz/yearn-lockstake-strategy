@@ -64,12 +64,13 @@ contract StrategyAprOracle {
         uint256 skyPerRewardToken = price(
             IStrategyInterface(_strategy).getSwapPath()
         );
-        uint256 rewardsPerYearInSky = (skyPerRewardToken * rewardsPerYear) /
-            1e18;
 
         // calculate APR: (SKY rewards per year) / (SKY staked)
+        // Combine operations to avoid precision loss from intermediate division
         return
-            stakedAmount > 0 ? (rewardsPerYearInSky * 1e18) / stakedAmount : 0; // apr in 1e18 (1e18=100%)
+            stakedAmount > 0 
+                ? (skyPerRewardToken * rewardsPerYear) / stakedAmount 
+                : 0; // apr in 1e18 (1e18=100%)
     }
 
     /// @notice Returns the price of a token using a MultiSwapper path.
