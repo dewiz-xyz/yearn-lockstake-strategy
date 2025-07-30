@@ -22,5 +22,5 @@ jobs:
         uses: crytic/slither-action@v0.4.1
         with:
           target: '.'
-          fail-on: 'medium'
+          fail-on: medium
           ignore-compile: false
