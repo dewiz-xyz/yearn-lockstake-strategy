@@ -20,25 +20,23 @@ contract StrategyAprOracle {
 
     uint256 private constant WAD = 1e18;
 
-    /**
-     * @notice Will return the expected Apr of a strategy post a debt change.
-     * @dev _delta is a signed integer so that it can also represent a debt
-     * decrease.
-     *
-     * This should return the annual expected return at the current timestamp
-     * represented as 1e18.
-     *
-     *      ie. 10% == 1e17
-     *
-     * _delta will be == 0 to get the current apr.
-     *
-     * This will potentially be called during non-view functions so gas
-     * efficiency should be taken into account.
-     *
-     * @param _strategy The token to get the apr for.
-     * @param _delta The difference in debt.
-     * @return The expected apr for the strategy represented as 1e18.
-     */
+    /// @notice Will return the expected APR of a strategy post a debt change.
+    /// @dev _delta is a signed integer so that it can also represent a debt
+    /// decrease.
+    ///
+    /// This should return the annual expected return at the current timestamp
+    /// represented as 1e18.
+    ///
+    ///      i.e., 10% == 1e17
+    ///
+    /// _delta will be == 0 to get the current apr.
+    ///
+    /// This will potentially be called during non-view functions so gas
+    /// efficiency should be taken into account.
+    ///
+    /// @param _strategy The strategy to get the apr for.
+    /// @param _delta The difference in debt.
+    /// @return The expected apr for the strategy represented as 1e18.
     function aprAfterDebtChange(address _strategy, int256 _delta) external view returns (uint256) {
         IStaking farm = IStaking(IStrategyInterface(_strategy).FARM());
 
@@ -48,18 +46,19 @@ contract StrategyAprOracle {
 
         uint256 rewardRate = farm.rewardRate();
 
-        // fetch staking token amount
+        // fetch staking token amount (always SKY)
         uint256 stakedAmount = uint256(int256(farm.totalSupply()) + _delta);
 
-        // fetch price using multiswapper path
-        uint256 stakePrice = price(IStrategyInterface(_strategy).getSwapPath());
+        // get rewards per year in reward token (e.g., SPK)
+        // rewardRate is rewards per second, so multiply by seconds in a year
+        uint256 rewardsPerYear = rewardRate * 365 days;
 
-        // calculate apr
-        uint256 tvl = stakePrice * stakedAmount;
+        // convert rewards to SKY using swap path (reward token -> SKY)
+        uint256 skyPerRewardToken = price(IStrategyInterface(_strategy).getSwapPath());
+        uint256 rewardsPerYearInSky = (skyPerRewardToken * rewardsPerYear) / 1e18;
 
-        uint256 rewardsPerYearSky = (rewardRate * 1e18 * 365 days);
-
-        return tvl > 0 ? (rewardsPerYearSky * 1e18) / tvl : 0; // apr in 1e18 (1e18=100%)
+        // calculate APR: (SKY rewards per year) / (SKY staked)
+        return stakedAmount > 0 ? (rewardsPerYearInSky * 1e18) / stakedAmount : 0; // apr in 1e18 (1e18=100%)
     }
 
     /// @notice Returns the price of a token using a MultiSwapper path.

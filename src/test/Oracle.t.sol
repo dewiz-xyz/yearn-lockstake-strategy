@@ -14,8 +14,7 @@ contract OracleTest is Setup {
     }
 
     function checkOracle(address _strategy, uint256 _delta) public {
-        // Check set up
-        // TODO: Add checks for the setup
+        _delta = bound(_delta, 1e16, 1e26); // 0.01 to 100M SKY (18 decimals)
 
         uint256 currentApr = oracle.aprAfterDebtChange(_strategy, 0);
 
@@ -23,19 +22,15 @@ contract OracleTest is Setup {
         assertGt(currentApr, 0, "ZERO");
         assertLt(currentApr, 1e18, "+100%");
 
-        // TODO: Uncomment to test the apr goes up and down based on debt changes
-        /**
-         * uint256 negativeDebtChangeApr = oracle.aprAfterDebtChange(_strategy, -int256(_delta));
-         *
-         *     // The apr should go up if deposits go down
-         *     assertLt(currentApr, negativeDebtChangeApr, "negative change");
-         *
-         *     uint256 positiveDebtChangeApr = oracle.aprAfterDebtChange(_strategy, int256(_delta));
-         *
-         *     assertGt(currentApr, positiveDebtChangeApr, "positive change");
-         */
+        uint256 negativeDebtChangeApr = oracle.aprAfterDebtChange(_strategy, -int256(_delta));
+         
+        // The apr should go up if deposits go down
+        assertLt(currentApr, negativeDebtChangeApr, "negative change");
 
-        // TODO: Uncomment if there are setter functions to test.
+        uint256 positiveDebtChangeApr = oracle.aprAfterDebtChange(_strategy, int256(_delta));
+        assertGt(currentApr, positiveDebtChangeApr, "positive change");
+
+        // TODO: Uncomment if there are setter functions to test. /// @dev no setters in this oracle
         /**
          * vm.expectRevert("!governance");
          *     vm.prank(user);
@@ -58,6 +53,4 @@ contract OracleTest is Setup {
 
         checkOracle(address(strategy), _delta);
     }
-
-    // TODO: Deploy multiple strategies with different tokens as `asset` to test against the oracle.
 }
