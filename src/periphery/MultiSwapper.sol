@@ -202,12 +202,25 @@ contract MultiSwapper {
      *
      * @param _path Path
      */
-    // slither-disable-start reentrancy-vulnerabilities-1
     function _setSwapPath(Hop[] memory _path) internal {
         delete path;
 
+        // Effects: Only update storage, no external calls
         for (uint256 i = 0; i < _path.length; i++) {
-            Hop memory hop = _path[i];
+            path.push(_path[i]);
+        }
+        
+        // Update approvals after state changes
+        updateApprovals();
+    }
+
+    /**
+     * @dev Updates token approvals for all hops in the current path.
+     * This function can be called publicly to refresh approvals if needed.
+     */
+    function updateApprovals() public {
+        for (uint256 i = 0; i < path.length; i++) {
+            Hop memory hop = path[i];
             if (hop.dex == Dex.UniV2) {
                 ERC20(hop.from).forceApprove(UNI_V2_ROUTER, type(uint256).max);
             } else if (hop.dex == Dex.UniV3) {
@@ -215,9 +228,6 @@ contract MultiSwapper {
             } else if (hop.dex == Dex.Psm) {
                 ERC20(hop.from).forceApprove(PSM_WRAPPER, type(uint256).max);
             }
-
-            path.push(_path[i]);
         }
     }
-    // slither-disable-end reentrancy-vulnerabilities-1
 }
