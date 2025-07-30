@@ -36,10 +36,14 @@ contract MultiSwapper {
     using SafeERC20 for ERC20;
 
     /// @dev Mainnet addresses
-    address public constant UNI_V2_ROUTER = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
-    address public constant UNI_V3_ROUTER = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
-    address public constant PSM_WRAPPER = 0xA188EEC8F81263234dA3622A406892F3D630f98c;
-    address public constant MKR_SKY = 0xA1Ea1bA18E88C381C724a75F23a130420C403f9a;
+    address public constant UNI_V2_ROUTER =
+        0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
+    address public constant UNI_V3_ROUTER =
+        0xE592427A0AEce92De3Edee1F18E0157C05861564;
+    address public constant PSM_WRAPPER =
+        0xA188EEC8F81263234dA3622A406892F3D630f98c;
+    address public constant MKR_SKY =
+        0xA1Ea1bA18E88C381C724a75F23a130420C403f9a;
     address public constant MKR = 0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2;
     address public constant USDS = 0xdC035D45d973E3EC169d2276DDab16f1e407384F;
     address public constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
@@ -59,7 +63,10 @@ contract MultiSwapper {
      * @param _minAmountOut The min of `_to` to get out.
      * @return _amountOut The actual amount of `_to` that was swapped to
      */
-    function _swapFrom(uint256 _amountIn, uint256 _minAmountOut) internal virtual returns (uint256 _amountOut) {
+    function _swapFrom(
+        uint256 _amountIn,
+        uint256 _minAmountOut
+    ) internal virtual returns (uint256 _amountOut) {
         uint256 len = path.length;
         require(len > 0, "no path");
 
@@ -70,7 +77,12 @@ contract MultiSwapper {
             if (hop.dex == Dex.UniV2) {
                 _amountOut = _uniV2SwapFrom(hop.from, hop.to, _amountOut);
             } else if (hop.dex == Dex.UniV3) {
-                _amountOut = _uniV3SwapFrom(hop.from, hop.to, hop.fee, _amountOut);
+                _amountOut = _uniV3SwapFrom(
+                    hop.from,
+                    hop.to,
+                    hop.fee,
+                    _amountOut
+                );
             } else if (hop.dex == Dex.Psm) {
                 _amountOut = _psmSwapFrom(hop.from, hop.to, _amountOut);
             } else if (hop.dex == Dex.MkrSky) {
@@ -89,14 +101,23 @@ contract MultiSwapper {
      * @param _amountIn The amount of `_from` we will swap.
      * @return _amountOut The actual amount of `_to` that was swapped to
      */
-    function _uniV2SwapFrom(address _from, address _to, uint256 _amountIn) private returns (uint256 _amountOut) {
+    function _uniV2SwapFrom(
+        address _from,
+        address _to,
+        uint256 _amountIn
+    ) private returns (uint256 _amountOut) {
         address[] memory _path = new address[](2);
         _path[0] = _from;
         _path[1] = _to;
 
-        uint256[] memory amounts = IUniswapV2Router02(UNI_V2_ROUTER).swapExactTokensForTokens(
-            _amountIn, 0, _path, address(this), block.timestamp
-        );
+        uint256[] memory amounts = IUniswapV2Router02(UNI_V2_ROUTER)
+            .swapExactTokensForTokens(
+                _amountIn,
+                0,
+                _path,
+                address(this),
+                block.timestamp
+            );
         _amountOut = amounts[1];
     }
 
@@ -109,12 +130,23 @@ contract MultiSwapper {
      * @param _amountIn The amount of `_from` we will swap.
      * @return _amountOut The actual amount of `_to` that was swapped to
      */
-    function _uniV3SwapFrom(address _from, address _to, uint24 _fee, uint256 _amountIn)
-        private
-        returns (uint256 _amountOut)
-    {
-        ISwapRouter.ExactInputSingleParams memory params =
-            ISwapRouter.ExactInputSingleParams(_from, _to, _fee, address(this), block.timestamp, _amountIn, 0, 0);
+    function _uniV3SwapFrom(
+        address _from,
+        address _to,
+        uint24 _fee,
+        uint256 _amountIn
+    ) private returns (uint256 _amountOut) {
+        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
+            .ExactInputSingleParams(
+                _from,
+                _to,
+                _fee,
+                address(this),
+                block.timestamp,
+                _amountIn,
+                0,
+                0
+            );
 
         _amountOut = ISwapRouter(UNI_V3_ROUTER).exactInputSingle(params);
     }
@@ -125,7 +157,9 @@ contract MultiSwapper {
      * @param _amountIn The amount of `_from` we will swap.
      * @return _amountOut The actual amount of `_to` that was swapped to
      */
-    function _mkrSkySwapFrom(uint256 _amountIn) private returns (uint256 _amountOut) {
+    function _mkrSkySwapFrom(
+        uint256 _amountIn
+    ) private returns (uint256 _amountOut) {
         IMkrSky(MKR_SKY).mkrToSky(address(this), _amountIn);
 
         uint256 rate = IMkrSky(MKR_SKY).rate();
@@ -145,7 +179,11 @@ contract MultiSwapper {
      * @param _amountIn The amount of `_from` we will swap.
      * @return _amountOut The actual amount of `_to` that was swapped to
      */
-    function _psmSwapFrom(address _from, address _to, uint256 _amountIn) private returns (uint256 _amountOut) {
+    function _psmSwapFrom(
+        address _from,
+        address _to,
+        uint256 _amountIn
+    ) private returns (uint256 _amountOut) {
         IPsmWrapper psm = IPsmWrapper(PSM_WRAPPER);
 
         if (_from == USDS && _to == USDC) {

@@ -23,7 +23,8 @@ contract LockstakeCumpounder is BaseHealthCheck, MultiSwapper {
     uint256 public constant URN_INDEX = 0;
 
     /// @notice The SKY governance token (ERC20) that the Vault holds.
-    ERC20 public constant SKY = ERC20(0x56072C95FAA701256059aa122697B133aDEd9279);
+    ERC20 public constant SKY =
+        ERC20(0x56072C95FAA701256059aa122697B133aDEd9279);
 
     /// @notice The reward token (ERC20) earned by farming SKY.
     ERC20 public immutable REWARD_TOKEN;
@@ -61,7 +62,11 @@ contract LockstakeCumpounder is BaseHealthCheck, MultiSwapper {
     /// @param _lockstakeEngine The address of the LockstakeEngine contract.
     /// @param _farm The address of the farm contract.
     /// @param _name The name of the strategy.
-    constructor(address _lockstakeEngine, address _farm, string memory _name) BaseHealthCheck(address(SKY), _name) {
+    constructor(
+        address _lockstakeEngine,
+        address _farm,
+        string memory _name
+    ) BaseHealthCheck(address(SKY), _name) {
         LOCK_STAKE_ENGINE = ILockstakeEngine(_lockstakeEngine);
         FARM = IStaking(_farm);
 
@@ -93,8 +98,17 @@ contract LockstakeCumpounder is BaseHealthCheck, MultiSwapper {
     ///  If useAuction is true, we will use the auction to sell the REWARD_TOKEN rewards.
     ///  If useAuction is false, we will swap the REWARD_TOKEN rewards to SKY through the MultiSwapper route.
     /// @return _totalAssets The total assets under management.
-    function _harvestAndReport() internal override returns (uint256 _totalAssets) {
-        LOCK_STAKE_ENGINE.getReward(address(this), URN_INDEX, address(FARM), address(this));
+    function _harvestAndReport()
+        internal
+        override
+        returns (uint256 _totalAssets)
+    {
+        LOCK_STAKE_ENGINE.getReward(
+            address(this),
+            URN_INDEX,
+            address(FARM),
+            address(this)
+        );
 
         uint256 balance = REWARD_TOKEN.balanceOf(address(this));
         if (balance > minAmountToSell) {
@@ -116,7 +130,9 @@ contract LockstakeCumpounder is BaseHealthCheck, MultiSwapper {
     /// @notice Returns the available deposit limit for a given address.
     /// @param _receiver The address to check the deposit limit for.
     /// @return The available deposit limit.
-    function availableDepositLimit(address _receiver) public view override returns (uint256) {
+    function availableDepositLimit(
+        address _receiver
+    ) public view override returns (uint256) {
         if (openDeposits || allowed[_receiver]) {
             return type(uint256).max;
         }
@@ -145,7 +161,12 @@ contract LockstakeCumpounder is BaseHealthCheck, MultiSwapper {
     function kick() external onlyKeepers {
         require(useAuction, "!useAuction");
 
-        LOCK_STAKE_ENGINE.getReward(address(this), URN_INDEX, address(FARM), address(this));
+        LOCK_STAKE_ENGINE.getReward(
+            address(this),
+            URN_INDEX,
+            address(FARM),
+            address(this)
+        );
 
         uint256 balance = REWARD_TOKEN.balanceOf(address(this));
         if (balance > minAmountToSell) {
@@ -174,7 +195,9 @@ contract LockstakeCumpounder is BaseHealthCheck, MultiSwapper {
 
     /// @notice Sets the minimum amount of rewardsToken to sell
     /// @param _minAmountToSell minimum amount to sell in wei
-    function setMinAmountToSell(uint256 _minAmountToSell) external onlyManagement {
+    function setMinAmountToSell(
+        uint256 _minAmountToSell
+    ) external onlyManagement {
         minAmountToSell = _minAmountToSell;
     }
 
@@ -187,7 +210,10 @@ contract LockstakeCumpounder is BaseHealthCheck, MultiSwapper {
     /// @notice Sets whether a specific depositor is allowed to deposit.
     /// @param _depositor The address of the depositor.
     /// @param _allowed Boolean indicating if the depositor is allowed.
-    function setAllowed(address _depositor, bool _allowed) external onlyManagement {
+    function setAllowed(
+        address _depositor,
+        bool _allowed
+    ) external onlyManagement {
         allowed[_depositor] = _allowed;
     }
 
@@ -219,7 +245,11 @@ contract LockstakeCumpounder is BaseHealthCheck, MultiSwapper {
     function setVoteDelegate(address _voteDelegate) external onlyManagement {
         voteDelegate = _voteDelegate;
 
-        LOCK_STAKE_ENGINE.selectVoteDelegate(address(this), URN_INDEX, voteDelegate);
+        LOCK_STAKE_ENGINE.selectVoteDelegate(
+            address(this),
+            URN_INDEX,
+            voteDelegate
+        );
     }
 
     /// @dev Returns the minimum of two unsigned integers.

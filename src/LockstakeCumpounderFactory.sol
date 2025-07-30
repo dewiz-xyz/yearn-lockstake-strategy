@@ -27,7 +27,12 @@ contract LockstakeCumpounderFactory {
     /// @param _performanceFeeRecipient The address of the performance fee recipient.
     /// @param _keeper The address of the keeper.
     /// @param _emergencyAdmin The address of the emergency admin.
-    constructor(address _management, address _performanceFeeRecipient, address _keeper, address _emergencyAdmin) {
+    constructor(
+        address _management,
+        address _performanceFeeRecipient,
+        address _keeper,
+        address _emergencyAdmin
+    ) {
         management = _management;
         performanceFeeRecipient = _performanceFeeRecipient;
         keeper = _keeper;
@@ -44,26 +49,43 @@ contract LockstakeCumpounderFactory {
      * @param _path The MultiSwapper path for swapping rewards.
      * @return The address of the new strategy.
      */
-    function newStrategy(address _farm, string calldata _name, Hop[] calldata _path)
-        external
-        virtual
-        returns (address)
-    {
-        require(implementationBytecode.length > 0, "Implementation bytecode not set");
+    function newStrategy(
+        address _farm,
+        string calldata _name,
+        Hop[] calldata _path
+    ) external virtual returns (address) {
+        require(
+            implementationBytecode.length > 0,
+            "Implementation bytecode not set"
+        );
 
         // Encode constructor arguments
-        bytes memory constructorArgs = abi.encode(lockstakeEngine, _farm, _name);
+        bytes memory constructorArgs = abi.encode(
+            lockstakeEngine,
+            _farm,
+            _name
+        );
 
         // Combine bytecode with constructor arguments
-        bytes memory deploymentBytecode = abi.encodePacked(implementationBytecode, constructorArgs);
+        bytes memory deploymentBytecode = abi.encodePacked(
+            implementationBytecode,
+            constructorArgs
+        );
 
         // Generate deterministic salt based on farm and current timestamp
-        bytes32 salt = keccak256(abi.encodePacked(_farm, _name, block.timestamp, msg.sender));
+        bytes32 salt = keccak256(
+            abi.encodePacked(_farm, _name, block.timestamp, msg.sender)
+        );
 
         // Deploy using CREATE2
         address strategy;
         assembly {
-            strategy := create2(0, add(deploymentBytecode, 0x20), mload(deploymentBytecode), salt)
+            strategy := create2(
+                0,
+                add(deploymentBytecode, 0x20),
+                mload(deploymentBytecode),
+                salt
+            )
         }
 
         require(strategy != address(0), "Strategy deployment failed");
@@ -91,7 +113,11 @@ contract LockstakeCumpounderFactory {
     /// @param _management The new management address.
     /// @param _performanceFeeRecipient The new performance fee recipient address.
     /// @param _keeper The new keeper address.
-    function setAddresses(address _management, address _performanceFeeRecipient, address _keeper) external {
+    function setAddresses(
+        address _management,
+        address _performanceFeeRecipient,
+        address _keeper
+    ) external {
         require(msg.sender == management, "!management");
         management = _management;
         performanceFeeRecipient = _performanceFeeRecipient;
@@ -108,7 +134,9 @@ contract LockstakeCumpounderFactory {
     /// @notice Checks if a strategy is deployed by this factory.
     /// @param _strategy The address of the strategy to check.
     /// @return A boolean indicating if the strategy is deployed by this factory.
-    function isDeployedStrategy(address _strategy) external view returns (bool) {
+    function isDeployedStrategy(
+        address _strategy
+    ) external view returns (bool) {
         address _farm = IStrategyInterface(_strategy).FARM();
         return deployments[_farm] == _strategy;
     }
