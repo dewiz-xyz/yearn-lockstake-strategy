@@ -202,7 +202,7 @@ contract MultiSwapper {
      *
      * @param _path Path
      */
-    // slither-disable-next-line reentrancy-events
+    // slither-disable-next-line reentrancy-vulnerabilities-1
     function _setSwapPath(Hop[] memory _path) internal {
         delete path;
 
