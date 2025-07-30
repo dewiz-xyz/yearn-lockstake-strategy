@@ -209,7 +209,7 @@ contract MultiSwapper {
         for (uint256 i = 0; i < _path.length; i++) {
             path.push(_path[i]);
         }
-        
+
         // Update approvals after state changes
         updateApprovals();
     }

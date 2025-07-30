@@ -68,8 +68,8 @@ contract StrategyAprOracle {
         // calculate APR: (SKY rewards per year) / (SKY staked)
         // Combine operations to avoid precision loss from intermediate division
         return
-            stakedAmount > 0 
-                ? (skyPerRewardToken * rewardsPerYear) / stakedAmount 
+            stakedAmount > 0
+                ? (skyPerRewardToken * rewardsPerYear) / stakedAmount
                 : 0; // apr in 1e18 (1e18=100%)
     }
 

@@ -74,7 +74,12 @@ contract LockstakeCumpounderFactory {
 
         // Generate deterministic salt based on farm and current timestamp
         bytes32 salt = keccak256(
-            abi.encodePacked(_farm, keccak256(abi.encodePacked(_name)), block.timestamp, msg.sender)
+            abi.encodePacked(
+                _farm,
+                keccak256(abi.encodePacked(_name)),
+                block.timestamp,
+                msg.sender
+            )
         );
 
         // Deploy using CREATE2
