@@ -10,7 +10,7 @@ import {IStrategyInterface} from "../interfaces/IStrategyInterface.sol";
 
 contract LockstakeCumpounderFactoryTest is Setup {
     LockstakeCumpounderFactory public testFactory;
-    
+
     address public newManagement = address(100);
     address public newPerformanceFeeRecipient = address(101);
     address public newKeeper = address(102);
@@ -18,7 +18,7 @@ contract LockstakeCumpounderFactoryTest is Setup {
 
     function setUp() public override {
         super.setUp();
-        
+
         testFactory = new LockstakeCumpounderFactory(
             management,
             performanceFeeRecipient,
@@ -29,11 +29,14 @@ contract LockstakeCumpounderFactoryTest is Setup {
 
     function test_factory_constructor() public {
         assertEq(testFactory.management(), management);
-        assertEq(testFactory.performanceFeeRecipient(), performanceFeeRecipient);
+        assertEq(
+            testFactory.performanceFeeRecipient(),
+            performanceFeeRecipient
+        );
         assertEq(testFactory.keeper(), keeper);
         assertEq(testFactory.emergencyAdmin(), emergencyAdmin);
         assertEq(testFactory.lockstakeEngine(), lockstakeEngine);
-        
+
         bytes32 hash = testFactory.getImplementationBytecodeHash();
         assertGt(uint256(hash), 0, "Implementation bytecode should be set");
         assertEq(hash, keccak256(type(LockstakeCumpounder).creationCode));
@@ -47,19 +50,50 @@ contract LockstakeCumpounderFactoryTest is Setup {
         vm.expectEmit(false, true, false, true);
         emit LockstakeCumpounderFactory.NewStrategy(address(0), farm); // address(0) will be replaced by actual address
 
-        address newStrategy = testFactory.newStrategy(farm, "Test Strategy", path);
-        
+        address newStrategy = testFactory.newStrategy(
+            farm,
+            "Test Strategy",
+            path
+        );
+
         assertNotEq(newStrategy, address(0), "Strategy should be deployed");
-        assertEq(testFactory.deployments(farm), newStrategy, "Deployment should be tracked");
-        assertTrue(testFactory.isDeployedStrategy(newStrategy), "Should recognize deployed strategy");
-        
+        assertEq(
+            testFactory.deployments(farm),
+            newStrategy,
+            "Deployment should be tracked"
+        );
+        assertTrue(
+            testFactory.isDeployedStrategy(newStrategy),
+            "Should recognize deployed strategy"
+        );
+
         IStrategyInterface strategyInterface = IStrategyInterface(newStrategy);
-        assertEq(strategyInterface.FARM(), farm, "Farm should be set correctly");
-        assertEq(strategyInterface.name(), "Test Strategy", "Name should be set correctly");
-        assertEq(strategyInterface.pendingManagement(), management, "Pending management should be set");
+        assertEq(
+            strategyInterface.FARM(),
+            farm,
+            "Farm should be set correctly"
+        );
+        assertEq(
+            strategyInterface.name(),
+            "Test Strategy",
+            "Name should be set correctly"
+        );
+        assertEq(
+            strategyInterface.pendingManagement(),
+            management,
+            "Pending management should be set"
+        );
         assertEq(strategyInterface.keeper(), keeper, "Keeper should be set");
-        assertEq(strategyInterface.performanceFeeRecipient(), performanceFeeRecipient, "Performance fee recipient should be set");
-        assertEq(strategyInterface.emergencyAdmin(), emergencyAdmin, "Emergency admin should be set");
+        assertEq(
+            strategyInterface.performanceFeeRecipient(),
+            performanceFeeRecipient,
+            "Performance fee recipient should be set"
+        );
+        assertEq(
+            strategyInterface.emergencyAdmin(),
+            emergencyAdmin,
+            "Emergency admin should be set"
+        );
     }
 
     function test_factory_newStrategy_redeployment() public {
@@ -67,34 +101,92 @@ contract LockstakeCumpounderFactoryTest is Setup {
         path[0] = Hop(Dex.UniV2, tokenAddrs["SPK"], tokenAddrs["SKY"], 0);
 
         // Deploy first strategy
-        address firstStrategy = testFactory.newStrategy(farm, "First Strategy", path);
-        
+        address firstStrategy = testFactory.newStrategy(
+            farm,
+            "First Strategy",
+            path
+        );
+
         // Deploy second strategy for same farm (should be allowed)
-        address secondStrategy = testFactory.newStrategy(farm, "Second Strategy", path);
-        
-        assertNotEq(firstStrategy, secondStrategy, "Strategies should be different");
-        assertEq(testFactory.deployments(farm), secondStrategy, "Latest deployment should be tracked");
-        assertTrue(testFactory.isDeployedStrategy(secondStrategy), "Should recognize latest deployed strategy");
-        assertFalse(testFactory.isDeployedStrategy(firstStrategy), "Should not recognize old strategy");
+        address secondStrategy = testFactory.newStrategy(
+            farm,
+            "Second Strategy",
+            path
+        );
+
+        assertNotEq(
+            firstStrategy,
+            secondStrategy,
+            "Strategies should be different"
+        );
+        assertEq(
+            testFactory.deployments(farm),
+            secondStrategy,
+            "Latest deployment should be tracked"
+        );
+        assertTrue(
+            testFactory.isDeployedStrategy(secondStrategy),
+            "Should recognize latest deployed strategy"
+        );
+        assertFalse(
+            testFactory.isDeployedStrategy(firstStrategy),
+            "Should not recognize old strategy"
+        );
     }
 
     function test_factory_newStrategy_emptyPath() public {
         Hop[] memory emptyPath = new Hop[](0);
 
-        address newStrategy = testFactory.newStrategy(farm, "Test Strategy", emptyPath);
-        assertNotEq(newStrategy, address(0), "Strategy should deploy with empty path");
+        address newStrategy = testFactory.newStrategy(
+            farm,
+            "Test Strategy",
+            emptyPath
+        );
+        assertNotEq(
+            newStrategy,
+            address(0),
+            "Strategy should deploy with empty path"
+        );
     }
 
     function test_factory_newStrategy_complexPath() public {
         Hop[] memory complexPath = new Hop[](4);
-        complexPath[0] = Hop(Dex.UniV3, tokenAddrs["SPK"], tokenAddrs["USDC"], 100);
-        complexPath[1] = Hop(Dex.Psm, tokenAddrs["USDC"], tokenAddrs["USDS"], 0);
-        complexPath[2] = Hop(Dex.UniV2, tokenAddrs["USDS"], tokenAddrs["DAI"], 0);
-        complexPath[3] = Hop(Dex.UniV3, tokenAddrs["DAI"], tokenAddrs["SKY"], 500);
+        complexPath[0] = Hop(
+            Dex.UniV3,
+            tokenAddrs["SPK"],
+            tokenAddrs["USDC"],
+            100
+        );
+        complexPath[1] = Hop(
+            Dex.Psm,
+            tokenAddrs["USDC"],
+            tokenAddrs["USDS"],
+            0
+        );
+        complexPath[2] = Hop(
+            Dex.UniV2,
+            tokenAddrs["USDS"],
+            tokenAddrs["DAI"],
+            0
+        );
+        complexPath[3] = Hop(
+            Dex.UniV3,
+            tokenAddrs["DAI"],
+            tokenAddrs["SKY"],
+            500
+        );
 
-        address newStrategy = testFactory.newStrategy(farm, "Complex Path Strategy", complexPath);
-        assertNotEq(newStrategy, address(0), "Strategy should deploy with complex path");
-        
+        address newStrategy = testFactory.newStrategy(
+            farm,
+            "Complex Path Strategy",
+            complexPath
+        );
+        assertNotEq(
+            newStrategy,
+            address(0),
+            "Strategy should deploy with complex path"
+        );
+
         IStrategyInterface strategyInterface = IStrategyInterface(newStrategy);
         assertEq(strategyInterface.name(), "Complex Path Strategy");
     }
@@ -102,13 +194,24 @@ contract LockstakeCumpounderFactoryTest is Setup {
     function test_factory_setAddresses() public {
         vm.expectRevert("!management");
         vm.prank(user);
-        testFactory.setAddresses(newManagement, newPerformanceFeeRecipient, newKeeper);
+        testFactory.setAddresses(
+            newManagement,
+            newPerformanceFeeRecipient,
+            newKeeper
+        );
 
         vm.prank(management);
-        testFactory.setAddresses(newManagement, newPerformanceFeeRecipient, newKeeper);
+        testFactory.setAddresses(
+            newManagement,
+            newPerformanceFeeRecipient,
+            newKeeper
+        );
 
         assertEq(testFactory.management(), newManagement);
-        assertEq(testFactory.performanceFeeRecipient(), newPerformanceFeeRecipient);
+        assertEq(
+            testFactory.performanceFeeRecipient(),
+            newPerformanceFeeRecipient
+        );
         assertEq(testFactory.keeper(), newKeeper);
     }
 
@@ -140,7 +243,8 @@ contract LockstakeCumpounderFactoryTest is Setup {
     }
 
     function test_factory_setImplementationBytecode() public {
-        bytes memory newBytecode = hex"608060405234801561001057600080fd5b50600080fd5b";
+        bytes
+            memory newBytecode = hex"608060405234801561001057600080fd5b50600080fd5b";
         bytes32 expectedHash = keccak256(newBytecode);
 
         vm.expectRevert("!management");
@@ -152,7 +256,9 @@ contract LockstakeCumpounderFactoryTest is Setup {
         testFactory.setImplementationBytecode("");
 
         vm.expectEmit(true, false, false, true);
-        emit LockstakeCumpounderFactory.ImplementationBytecodeUpdated(expectedHash);
+        emit LockstakeCumpounderFactory.ImplementationBytecodeUpdated(
+            expectedHash
+        );
 
         vm.prank(management);
         testFactory.setImplementationBytecode(newBytecode);
@@ -169,15 +275,22 @@ contract LockstakeCumpounderFactoryTest is Setup {
         vm.prank(management);
         testFactory.setImplementationBytecode(largeBytecode);
 
-        assertEq(testFactory.getImplementationBytecodeHash(), keccak256(largeBytecode));
+        assertEq(
+            testFactory.getImplementationBytecodeHash(),
+            keccak256(largeBytecode)
+        );
     }
 
     function test_factory_isDeployedStrategy() public {
         Hop[] memory path = new Hop[](1);
         path[0] = Hop(Dex.UniV2, tokenAddrs["SPK"], tokenAddrs["SKY"], 0);
 
-        address deployedStrategy = testFactory.newStrategy(farm, "Test Strategy", path);
-        
+        address deployedStrategy = testFactory.newStrategy(
+            farm,
+            "Test Strategy",
+            path
+        );
+
         assertTrue(testFactory.isDeployedStrategy(deployedStrategy));
         assertFalse(testFactory.isDeployedStrategy(address(strategy))); // Different factory - strategy from Setup
     }
@@ -186,19 +299,31 @@ contract LockstakeCumpounderFactoryTest is Setup {
         Hop[] memory path = new Hop[](1);
         path[0] = Hop(Dex.UniV2, tokenAddrs["SPK"], tokenAddrs["SKY"], 0);
 
-        address firstStrategy = testFactory.newStrategy(farm, "First Strategy", path);
+        address firstStrategy = testFactory.newStrategy(
+            farm,
+            "First Strategy",
+            path
+        );
         assertTrue(testFactory.isDeployedStrategy(firstStrategy));
 
-        address secondStrategy = testFactory.newStrategy(farm, "Second Strategy", path);
+        address secondStrategy = testFactory.newStrategy(
+            farm,
+            "Second Strategy",
+            path
+        );
         assertTrue(testFactory.isDeployedStrategy(secondStrategy));
         assertFalse(testFactory.isDeployedStrategy(firstStrategy)); // Should be false after redeployment
     }
 
     function test_factory_getImplementationBytecodeHash() public {
         bytes32 initialHash = testFactory.getImplementationBytecodeHash();
-        assertEq(initialHash, keccak256(type(LockstakeCumpounder).creationCode));
+        assertEq(
+            initialHash,
+            keccak256(type(LockstakeCumpounder).creationCode)
+        );
 
-        bytes memory newBytecode = hex"608060405234801561001057600080fd5b50600080fd5b";
+        bytes
+            memory newBytecode = hex"608060405234801561001057600080fd5b50600080fd5b";
         vm.prank(management);
         testFactory.setImplementationBytecode(newBytecode);
 
@@ -213,7 +338,7 @@ contract LockstakeCumpounderFactoryTest is Setup {
 
         address strategy1 = testFactory.newStrategy(farm, "Strategy 1", path);
         assertEq(testFactory.deployments(farm), strategy1);
-        
+
         assertEq(testFactory.deployments(address(0x3333)), address(0)); // Non-existent farm
     }
 
@@ -221,36 +346,59 @@ contract LockstakeCumpounderFactoryTest is Setup {
         Hop[] memory path = new Hop[](1);
         path[0] = Hop(Dex.UniV2, tokenAddrs["SPK"], tokenAddrs["SKY"], 0);
 
-        address firstStrategy = testFactory.newStrategy(farm, "First Strategy", path);
+        address firstStrategy = testFactory.newStrategy(
+            farm,
+            "First Strategy",
+            path
+        );
         assertEq(testFactory.deployments(farm), firstStrategy);
 
-        address secondStrategy = testFactory.newStrategy(farm, "Second Strategy", path);
+        address secondStrategy = testFactory.newStrategy(
+            farm,
+            "Second Strategy",
+            path
+        );
         assertEq(testFactory.deployments(farm), secondStrategy);
         assertNotEq(firstStrategy, secondStrategy);
     }
 
     function test_factory_newStrategy_afterAddressUpdate() public {
         vm.prank(management);
-        testFactory.setAddresses(newManagement, newPerformanceFeeRecipient, newKeeper);
+        testFactory.setAddresses(
+            newManagement,
+            newPerformanceFeeRecipient,
+            newKeeper
+        );
 
         Hop[] memory path = new Hop[](1);
         path[0] = Hop(Dex.UniV2, tokenAddrs["SPK"], tokenAddrs["SKY"], 0);
 
-        address newStrategy = testFactory.newStrategy(farm, "Test Strategy", path);
-        
+        address newStrategy = testFactory.newStrategy(
+            farm,
+            "Test Strategy",
+            path
+        );
+
         IStrategyInterface strategyInterface = IStrategyInterface(newStrategy);
         assertEq(strategyInterface.pendingManagement(), newManagement);
         assertEq(strategyInterface.keeper(), newKeeper);
-        assertEq(strategyInterface.performanceFeeRecipient(), newPerformanceFeeRecipient);
+        assertEq(
+            strategyInterface.performanceFeeRecipient(),
+            newPerformanceFeeRecipient
+        );
     }
 
     function test_factory_immutable_emergencyAdmin() public {
         assertEq(testFactory.emergencyAdmin(), emergencyAdmin);
-        
+
         Hop[] memory path = new Hop[](1);
         path[0] = Hop(Dex.UniV2, tokenAddrs["SPK"], tokenAddrs["SKY"], 0);
 
-        address newStrategy = testFactory.newStrategy(farm, "Test Strategy", path);
+        address newStrategy = testFactory.newStrategy(
+            farm,
+            "Test Strategy",
+            path
+        );
         IStrategyInterface strategyInterface = IStrategyInterface(newStrategy);
         assertEq(strategyInterface.emergencyAdmin(), emergencyAdmin);
     }

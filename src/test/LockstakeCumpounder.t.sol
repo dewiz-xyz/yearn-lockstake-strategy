@@ -7,11 +7,13 @@ import {Auction} from "@periphery/Auctions/Auction.sol";
 
 contract LockstakeCumpounderTest is Setup {
     address public mockAuction;
-    
+
     function setUp() public virtual override {
         super.setUp();
-        
-        mockAuction = address(new MockAuction(address(strategy), address(asset)));
+
+        mockAuction = address(
+            new MockAuction(address(strategy), address(asset))
+        );
     }
 
     function test_setSwapPath() public {
@@ -50,7 +52,7 @@ contract LockstakeCumpounderTest is Setup {
 
     function test_setMinAmountToSell() public {
         uint256 initialAmount = strategy.minAmountToSell();
-        uint256 newAmount = 50_000 * 10**18;
+        uint256 newAmount = 50_000 * 10 ** 18;
 
         vm.expectRevert("!management");
         strategy.setMinAmountToSell(newAmount);
@@ -64,7 +66,7 @@ contract LockstakeCumpounderTest is Setup {
 
     function test_setOpenDeposits() public {
         vm.prank(management);
-        strategy.setOpenDeposits(false);            
+        strategy.setOpenDeposits(false);
         assertFalse(strategy.openDeposits());
 
         vm.expectRevert("!management");
@@ -83,7 +85,7 @@ contract LockstakeCumpounderTest is Setup {
 
     function test_setAllowed() public {
         address testUser = address(0x123);
-        
+
         assertFalse(strategy.allowed(testUser));
 
         vm.expectRevert("!management");
@@ -104,7 +106,7 @@ contract LockstakeCumpounderTest is Setup {
         address testUser = address(0x123);
 
         vm.prank(management);
-        strategy.setOpenDeposits(false);        
+        strategy.setOpenDeposits(false);
         assertEq(strategy.availableDepositLimit(testUser), 0);
 
         vm.prank(management);
@@ -113,7 +115,10 @@ contract LockstakeCumpounderTest is Setup {
 
         vm.prank(management);
         strategy.setOpenDeposits(true);
-        assertEq(strategy.availableDepositLimit(address(0x456)), type(uint256).max);
+        assertEq(
+            strategy.availableDepositLimit(address(0x456)),
+            type(uint256).max
+        );
 
         vm.prank(management);
         strategy.setAllowed(testUser, false);
@@ -136,7 +141,9 @@ contract LockstakeCumpounderTest is Setup {
     }
 
     function test_setAuction_invalidReceiver() public {
-        address invalidAuction = address(new MockAuction(address(0x123), tokenAddrs["WETH"]));
+        address invalidAuction = address(
+            new MockAuction(address(0x123), tokenAddrs["WETH"])
+        );
 
         vm.expectRevert("receiver");
         vm.prank(management);
@@ -144,7 +151,9 @@ contract LockstakeCumpounderTest is Setup {
     }
 
     function test_setAuction_invalidWant() public {
-        address invalidAuction = address(new MockAuction(address(strategy), tokenAddrs["WETH"]));
+        address invalidAuction = address(
+            new MockAuction(address(strategy), tokenAddrs["WETH"])
+        );
 
         vm.expectRevert(bytes("want"));
         vm.prank(management);
@@ -196,18 +205,21 @@ contract LockstakeCumpounderTest is Setup {
     }
 
     function test_kick_withAuction() public {
-        MockAuction auction = new MockAuction(address(strategy), address(asset));
-        
+        MockAuction auction = new MockAuction(
+            address(strategy),
+            address(asset)
+        );
+
         address rewardToken = strategy.REWARD_TOKEN();
         auction.enable(rewardToken);
-        
+
         vm.prank(management);
         strategy.setAuction(address(auction));
 
         vm.prank(management);
         strategy.setUseAuction(true);
 
-        deal(rewardToken, address(strategy), 50_000 * 10**18); // Above default minAmountToSell
+        deal(rewardToken, address(strategy), 50_000 * 10 ** 18); // Above default minAmountToSell
 
         uint256 balanceBefore = ERC20(rewardToken).balanceOf(address(auction));
 
@@ -224,26 +236,29 @@ contract LockstakeCumpounderTest is Setup {
     function test_kick_belowMinAmount() public {
         vm.prank(management);
         strategy.setAuction(mockAuction);
-        
+
         vm.prank(management);
         strategy.setUseAuction(true);
 
         address rewardToken = address(strategy.REWARD_TOKEN());
-        deal(rewardToken, address(strategy), 1000 * 10**18); // Below default minAmountToSell
+        deal(rewardToken, address(strategy), 1000 * 10 ** 18); // Below default minAmountToSell
 
         uint256 balanceBefore = ERC20(rewardToken).balanceOf(address(strategy));
 
         vm.prank(keeper);
         strategy.kick();
 
-        assertEq(ERC20(rewardToken).balanceOf(address(strategy)), balanceBefore);
+        assertEq(
+            ERC20(rewardToken).balanceOf(address(strategy)),
+            balanceBefore
+        );
     }
 
     function test_emergencyWithdraw() public {
         uint256 amount = 100e18;
-        
+
         mintAndDepositIntoStrategy(strategy, user, amount);
-        
+
         uint256 stakedBefore = strategy.balanceOfStake();
         assertGt(stakedBefore, 0);
 
@@ -260,11 +275,11 @@ contract MockAuction is Auction {
     constructor(address _receiver, address _want) {
         // Initialize the auction with required parameters
         initialize(
-            _want,           // want token
-            _receiver,       // receiver address
-            msg.sender,      // governance (use deployer for testing)
-            1 days,          // auction length (1 day for testing)
-            1e18             // starting price (1 token for testing)
+            _want, // want token
+            _receiver, // receiver address
+            msg.sender, // governance (use deployer for testing)
+            1 days, // auction length (1 day for testing)
+            1e18 // starting price (1 token for testing)
         );
     }
 }
