@@ -48,4 +48,12 @@ interface IStrategyInterface is IBaseHealthCheck {
     function setOpenDeposits(bool _openDeposits) external;
 
     function setAllowed(address _depositor, bool _allowed) external;
+
+    function auction() external view returns (address);
+
+    function setAuction(address _auction) external;
+
+    function useAuction() external view returns (bool);
+
+    function setUseAuction(bool _useAuction) external;
 }
