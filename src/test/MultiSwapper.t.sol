@@ -7,6 +7,12 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 
 import {MultiSwapper, Hop, Dex} from "../periphery/MultiSwapper.sol";
 
+interface IPSM {
+    function file(bytes32 what, uint256 data) external;
+    function tin() external view returns (uint256);
+    function tout() external view returns (uint256);
+}
+
 contract MockMultiSwapper is MultiSwapper {
     address public owner;
 
@@ -37,6 +43,10 @@ contract MultiSwapperTest is Test {
     address public constant USDS = 0xdC035D45d973E3EC169d2276DDab16f1e407384F;
     address public constant MKR = 0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2;
     address public constant SKY = 0x56072C95FAA701256059aa122697B133aDEd9279;
+    address public constant MAKER_GOVERNANCE =
+        0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB;
+    address public constant PSM_CONTRACT =
+        0xf6e72Db5454dd049d0788e411b06CfAF16853042;
 
     function setUp() public {
         multiSwapper = new MockMultiSwapper();
@@ -307,5 +317,85 @@ contract MultiSwapperTest is Test {
 
         vm.expectRevert("invalid PSM hop");
         multiSwapper.swapFrom(amount, 0);
+    }
+
+    function test_PsmSwapWithFee(uint256 amount) public {
+        amount = bound(amount, 1e6, 1e12); // 1 to 1M USDC (6 decimals)
+
+        Hop[] memory path = new Hop[](1);
+        path[0] = Hop(Dex.Psm, USDC, USDS, 0);
+
+        multiSwapper.setSwapPath(path);
+
+        // Set tin fee to 1% (1e16 in WAD format where 1e18 = 100%)
+        uint256 tinFee = 1e16; // 1%
+
+        vm.prank(MAKER_GOVERNANCE);
+        IPSM(PSM_CONTRACT).file("tin", tinFee);
+
+        deal(USDC, address(multiSwapper), amount);
+
+        uint256 initialUSDCBalance = ERC20(USDC).balanceOf(
+            address(multiSwapper)
+        );
+        uint256 initialUSDSBalance = ERC20(USDS).balanceOf(
+            address(multiSwapper)
+        );
+
+        assertEq(initialUSDCBalance, amount, "Initial USDC balance incorrect");
+        assertEq(initialUSDSBalance, 0, "Initial USDS balance should be 0");
+
+        uint256 amountOut = multiSwapper.swapFrom(amount, 0);
+
+        assertEq(
+            ERC20(USDC).balanceOf(address(multiSwapper)),
+            0,
+            "USDC should be fully swapped"
+        );
+        assertEq(
+            ERC20(USDS).balanceOf(address(multiSwapper)),
+            amountOut,
+            "USDS balance should match amountOut"
+        );
+    }
+
+    function test_PsmSwapReverseWithFee(uint256 amount) public {
+        amount = bound(amount, 1e18, 1e24); // 1 to 1M USDS (18 decimals)
+
+        Hop[] memory path = new Hop[](1);
+        path[0] = Hop(Dex.Psm, USDS, USDC, 0);
+
+        multiSwapper.setSwapPath(path);
+
+        // Set tout fee to 0.5% (5e15 in WAD format where 1e18 = 100%)
+        uint256 toutFee = 5e15; // 0.5%
+
+        vm.prank(MAKER_GOVERNANCE);
+        IPSM(PSM_CONTRACT).file("tout", toutFee);
+
+        deal(USDS, address(multiSwapper), amount);
+
+        uint256 initialUSDSBalance = ERC20(USDS).balanceOf(
+            address(multiSwapper)
+        );
+        uint256 initialUSDCBalance = ERC20(USDC).balanceOf(
+            address(multiSwapper)
+        );
+
+        assertEq(initialUSDSBalance, amount, "Initial USDS balance incorrect");
+        assertEq(initialUSDCBalance, 0, "Initial USDC balance should be 0");
+
+        uint256 amountOut = multiSwapper.swapFrom(amount, 0);
+
+        assertLt(
+            ERC20(USDS).balanceOf(address(multiSwapper)),
+            1e13,
+            "USDS should be fully swapped"
+        ); // values under 1e13 are leftover due to precision loss.
+        assertEq(
+            ERC20(USDC).balanceOf(address(multiSwapper)),
+            amountOut,
+            "USDC balance should match amountOut"
+        );
     }
 }
