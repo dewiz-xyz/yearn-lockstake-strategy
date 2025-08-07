@@ -42,6 +42,9 @@ contract LockstakeCumpounderFactory {
      * @param _path The MultiSwapper path for swapping rewards.
      * @return The address of the new strategy.
      */
+
+    // Safe: Constructor call to deploy strategy is trusted, no reentrancy risk
+    // slither-disable-next-line reentrancy-no-eth     
     function newStrategy(
         address _farm,
         string calldata _name,
@@ -58,8 +61,6 @@ contract LockstakeCumpounderFactory {
             _name
         );
 
-        // slither-disable-next-line reentrancy-no-eth
-        // Safe: Constructor call above is trusted, no reentrancy risk
         deployments[_farm] = address(_newStrategy);
 
         IStrategyInterface _strategyInterface = IStrategyInterface(
