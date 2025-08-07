@@ -58,6 +58,8 @@ contract LockstakeCumpounderFactory {
             _name
         );
 
+        // slither-disable-next-line reentrancy-no-eth
+        // Safe: Constructor call above is trusted, no reentrancy risk
         deployments[_farm] = address(_newStrategy);
 
         IStrategyInterface _strategyInterface = IStrategyInterface(
