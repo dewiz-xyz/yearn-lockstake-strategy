@@ -211,7 +211,7 @@ contract LockstakeCumpounderFactoryTest is Setup {
         );
 
         assertTrue(testFactory.isDeployedStrategy(deployedStrategy));
-        assertFalse(testFactory.isDeployedStrategy(address(strategy))); 
+        assertFalse(testFactory.isDeployedStrategy(address(strategy)));
     }
 
     function test_factory_deployments_mapping() public {
@@ -275,7 +275,11 @@ contract LockstakeCumpounderFactoryTest is Setup {
             path
         );
 
-        assertNotEq(firstStrategy, address(0), "First strategy should be deployed");
+        assertNotEq(
+            firstStrategy,
+            address(0),
+            "First strategy should be deployed"
+        );
         assertEq(
             testFactory.deployments(farm),
             firstStrategy,
@@ -287,11 +291,7 @@ contract LockstakeCumpounderFactoryTest is Setup {
         );
 
         vm.expectRevert("Strategy already deployed for this farm");
-        testFactory.newStrategy(
-            farm,
-            "Second Strategy",
-            path
-        );
+        testFactory.newStrategy(farm, "Second Strategy", path);
 
         assertEq(
             testFactory.deployments(farm),

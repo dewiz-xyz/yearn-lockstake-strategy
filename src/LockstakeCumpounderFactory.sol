@@ -48,7 +48,10 @@ contract LockstakeCumpounderFactory {
         Hop[] calldata _path
     ) external virtual returns (address) {
         // Check if a strategy has already been deployed for this farm
-        require(deployments[_farm] == address(0), "Strategy already deployed for this farm");
+        require(
+            deployments[_farm] == address(0),
+            "Strategy already deployed for this farm"
+        );
 
         // Deploy new LockstakeCumpounder strategy
         LockstakeCumpounder _newStrategy = new LockstakeCumpounder(
@@ -58,7 +61,9 @@ contract LockstakeCumpounderFactory {
         );
 
         // Cast to interface to access TokenizedStrategy methods
-        IStrategyInterface _strategyInterface = IStrategyInterface(address(_newStrategy));
+        IStrategyInterface _strategyInterface = IStrategyInterface(
+            address(_newStrategy)
+        );
 
         _strategyInterface.setPerformanceFeeRecipient(performanceFeeRecipient);
 
