@@ -92,44 +92,6 @@ contract LockstakeCumpounderFactoryTest is Setup {
         );
     }
 
-    function test_factory_newStrategy_redeployment() public {
-        Hop[] memory path = new Hop[](1);
-        path[0] = Hop(Dex.UniV2, tokenAddrs["SPK"], tokenAddrs["SKY"], 0);
-
-        // Deploy first strategy
-        address firstStrategy = testFactory.newStrategy(
-            farm,
-            "First Strategy",
-            path
-        );
-
-        // Deploy second strategy for same farm (should be allowed)
-        address secondStrategy = testFactory.newStrategy(
-            farm,
-            "Second Strategy",
-            path
-        );
-
-        assertNotEq(
-            firstStrategy,
-            secondStrategy,
-            "Strategies should be different"
-        );
-        assertEq(
-            testFactory.deployments(farm),
-            secondStrategy,
-            "Latest deployment should be tracked"
-        );
-        assertTrue(
-            testFactory.isDeployedStrategy(secondStrategy),
-            "Should recognize latest deployed strategy"
-        );
-        assertFalse(
-            testFactory.isDeployedStrategy(firstStrategy),
-            "Should not recognize old strategy"
-        );
-    }
-
     function test_factory_newStrategy_emptyPath() public {
         Hop[] memory emptyPath = new Hop[](0);
 
@@ -249,27 +211,7 @@ contract LockstakeCumpounderFactoryTest is Setup {
         );
 
         assertTrue(testFactory.isDeployedStrategy(deployedStrategy));
-        assertFalse(testFactory.isDeployedStrategy(address(strategy))); // Different factory - strategy from Setup
-    }
-
-    function test_factory_isDeployedStrategy_afterRedeployment() public {
-        Hop[] memory path = new Hop[](1);
-        path[0] = Hop(Dex.UniV2, tokenAddrs["SPK"], tokenAddrs["SKY"], 0);
-
-        address firstStrategy = testFactory.newStrategy(
-            farm,
-            "First Strategy",
-            path
-        );
-        assertTrue(testFactory.isDeployedStrategy(firstStrategy));
-
-        address secondStrategy = testFactory.newStrategy(
-            farm,
-            "Second Strategy",
-            path
-        );
-        assertTrue(testFactory.isDeployedStrategy(secondStrategy));
-        assertFalse(testFactory.isDeployedStrategy(firstStrategy)); // Should be false after redeployment
+        assertFalse(testFactory.isDeployedStrategy(address(strategy))); 
     }
 
     function test_factory_deployments_mapping() public {
@@ -280,26 +222,6 @@ contract LockstakeCumpounderFactoryTest is Setup {
         assertEq(testFactory.deployments(farm), strategy1);
 
         assertEq(testFactory.deployments(address(0x3333)), address(0)); // Non-existent farm
-    }
-
-    function test_factory_deployments_overwrite() public {
-        Hop[] memory path = new Hop[](1);
-        path[0] = Hop(Dex.UniV2, tokenAddrs["SPK"], tokenAddrs["SKY"], 0);
-
-        address firstStrategy = testFactory.newStrategy(
-            farm,
-            "First Strategy",
-            path
-        );
-        assertEq(testFactory.deployments(farm), firstStrategy);
-
-        address secondStrategy = testFactory.newStrategy(
-            farm,
-            "Second Strategy",
-            path
-        );
-        assertEq(testFactory.deployments(farm), secondStrategy);
-        assertNotEq(firstStrategy, secondStrategy);
     }
 
     function test_factory_newStrategy_afterAddressUpdate() public {
@@ -341,5 +263,44 @@ contract LockstakeCumpounderFactoryTest is Setup {
         );
         IStrategyInterface strategyInterface = IStrategyInterface(newStrategy);
         assertEq(strategyInterface.emergencyAdmin(), emergencyAdmin);
+    }
+
+    function test_factory_newStrategy_revertOnRedeployment() public {
+        Hop[] memory path = new Hop[](1);
+        path[0] = Hop(Dex.UniV2, tokenAddrs["SPK"], tokenAddrs["SKY"], 0);
+
+        address firstStrategy = testFactory.newStrategy(
+            farm,
+            "First Strategy",
+            path
+        );
+
+        assertNotEq(firstStrategy, address(0), "First strategy should be deployed");
+        assertEq(
+            testFactory.deployments(farm),
+            firstStrategy,
+            "First deployment should be tracked"
+        );
+        assertTrue(
+            testFactory.isDeployedStrategy(firstStrategy),
+            "Should recognize first deployed strategy"
+        );
+
+        vm.expectRevert("Strategy already deployed for this farm");
+        testFactory.newStrategy(
+            farm,
+            "Second Strategy",
+            path
+        );
+
+        assertEq(
+            testFactory.deployments(farm),
+            firstStrategy,
+            "Original deployment should still be tracked"
+        );
+        assertTrue(
+            testFactory.isDeployedStrategy(firstStrategy),
+            "Should still recognize original deployed strategy"
+        );
     }
 }
