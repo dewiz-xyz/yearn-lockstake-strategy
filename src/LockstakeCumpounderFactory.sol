@@ -44,7 +44,7 @@ contract LockstakeCumpounderFactory {
      */
 
     // Safe: Constructor call to deploy strategy is trusted, no reentrancy risk
-    // slither-disable-next-line reentrancy-no-eth     
+    // slither-disable-next-line reentrancy-no-eth
     function newStrategy(
         address _farm,
         string calldata _name,
