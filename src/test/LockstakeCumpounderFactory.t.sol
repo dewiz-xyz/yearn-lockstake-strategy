@@ -36,10 +36,6 @@ contract LockstakeCumpounderFactoryTest is Setup {
         assertEq(testFactory.keeper(), keeper);
         assertEq(testFactory.emergencyAdmin(), emergencyAdmin);
         assertEq(testFactory.lockstakeEngine(), lockstakeEngine);
-
-        bytes32 hash = testFactory.getImplementationBytecodeHash();
-        assertGt(uint256(hash), 0, "Implementation bytecode should be set");
-        assertEq(hash, keccak256(type(LockstakeCumpounder).creationCode));
     }
 
     function test_factory_newStrategy1() public {
@@ -242,45 +238,6 @@ contract LockstakeCumpounderFactoryTest is Setup {
         assertEq(testFactory.lockstakeEngine(), address(0));
     }
 
-    function test_factory_setImplementationBytecode() public {
-        bytes
-            memory newBytecode = hex"608060405234801561001057600080fd5b50600080fd5b";
-        bytes32 expectedHash = keccak256(newBytecode);
-
-        vm.expectRevert("!management");
-        vm.prank(user);
-        testFactory.setImplementationBytecode(newBytecode);
-
-        vm.expectRevert("Invalid bytecode");
-        vm.prank(management);
-        testFactory.setImplementationBytecode("");
-
-        vm.expectEmit(true, false, false, true);
-        emit LockstakeCumpounderFactory.ImplementationBytecodeUpdated(
-            expectedHash
-        );
-
-        vm.prank(management);
-        testFactory.setImplementationBytecode(newBytecode);
-
-        assertEq(testFactory.getImplementationBytecodeHash(), expectedHash);
-    }
-
-    function test_factory_setImplementationBytecode_largeCode() public {
-        bytes memory largeBytecode = new bytes(1024);
-        for (uint i = 0; i < 1024; i++) {
-            largeBytecode[i] = bytes1(uint8(i % 256));
-        }
-
-        vm.prank(management);
-        testFactory.setImplementationBytecode(largeBytecode);
-
-        assertEq(
-            testFactory.getImplementationBytecodeHash(),
-            keccak256(largeBytecode)
-        );
-    }
-
     function test_factory_isDeployedStrategy() public {
         Hop[] memory path = new Hop[](1);
         path[0] = Hop(Dex.UniV2, tokenAddrs["SPK"], tokenAddrs["SKY"], 0);
@@ -313,23 +270,6 @@ contract LockstakeCumpounderFactoryTest is Setup {
         );
         assertTrue(testFactory.isDeployedStrategy(secondStrategy));
         assertFalse(testFactory.isDeployedStrategy(firstStrategy)); // Should be false after redeployment
-    }
-
-    function test_factory_getImplementationBytecodeHash() public {
-        bytes32 initialHash = testFactory.getImplementationBytecodeHash();
-        assertEq(
-            initialHash,
-            keccak256(type(LockstakeCumpounder).creationCode)
-        );
-
-        bytes
-            memory newBytecode = hex"608060405234801561001057600080fd5b50600080fd5b";
-        vm.prank(management);
-        testFactory.setImplementationBytecode(newBytecode);
-
-        bytes32 newHash = testFactory.getImplementationBytecodeHash();
-        assertEq(newHash, keccak256(newBytecode));
-        assertNotEq(newHash, initialHash);
     }
 
     function test_factory_deployments_mapping() public {
