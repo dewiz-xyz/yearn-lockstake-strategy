@@ -4,12 +4,12 @@ pragma solidity ^0.8.18;
 import "forge-std/console2.sol";
 import {Setup} from "./utils/Setup.sol";
 
-import {LockstakeCumpounderFactory} from "../LockstakeCumpounderFactory.sol";
-import {LockstakeCumpounder, Hop, Dex} from "../LockstakeCumpounder.sol";
+import {LockstakeCompounderFactory} from "../LockstakeCompounderFactory.sol";
+import {LockstakeCompounder, Hop, Dex} from "../LockstakeCompounder.sol";
 import {IStrategyInterface} from "../interfaces/IStrategyInterface.sol";
 
-contract LockstakeCumpounderFactoryTest is Setup {
-    LockstakeCumpounderFactory public testFactory;
+contract LockstakeCompounderFactoryTest is Setup {
+    LockstakeCompounderFactory public testFactory;
 
     address public newManagement = address(100);
     address public newPerformanceFeeRecipient = address(101);
@@ -19,7 +19,7 @@ contract LockstakeCumpounderFactoryTest is Setup {
     function setUp() public override {
         super.setUp();
 
-        testFactory = new LockstakeCumpounderFactory(
+        testFactory = new LockstakeCompounderFactory(
             management,
             performanceFeeRecipient,
             keeper,
@@ -44,7 +44,7 @@ contract LockstakeCumpounderFactoryTest is Setup {
         path[1] = Hop(Dex.UniV2, tokenAddrs["USDC"], tokenAddrs["SKY"], 0);
 
         vm.expectEmit(false, true, false, true);
-        emit LockstakeCumpounderFactory.NewStrategy(address(0), farm); // address(0) will be replaced by actual address
+        emit LockstakeCompounderFactory.NewStrategy(address(0), farm); // address(0) will be replaced by actual address
 
         address newStrategy = testFactory.newStrategy(
             farm,

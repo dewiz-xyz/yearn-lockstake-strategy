@@ -4,8 +4,8 @@ pragma solidity ^0.8.18;
 import "forge-std/console2.sol";
 import {Test} from "forge-std/Test.sol";
 
-import {LockstakeCumpounder, ERC20, Hop, Dex} from "../../LockstakeCumpounder.sol";
-import {LockstakeCumpounderFactory} from "../../LockstakeCumpounderFactory.sol";
+import {LockstakeCompounder, ERC20, Hop, Dex} from "../../LockstakeCompounder.sol";
+import {LockstakeCompounderFactory} from "../../LockstakeCompounderFactory.sol";
 import {IStrategyInterface} from "../../interfaces/IStrategyInterface.sol";
 
 // Inherit the events so they can be checked if desired.
@@ -24,7 +24,7 @@ contract Setup is Test, IEvents {
     ERC20 public asset;
     IStrategyInterface public strategy;
 
-    LockstakeCumpounderFactory public strategyFactory;
+    LockstakeCompounderFactory public strategyFactory;
     address public lockstakeEngine = 0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3; // LOCKSTAKE_ENGINE
     address public farm = 0x99cBC0e4E6427F6939536eD24d1275B95ff77404; // REWARDS_LSSKY_SPK
 
@@ -60,7 +60,7 @@ contract Setup is Test, IEvents {
         // Set decimals
         decimals = asset.decimals();
 
-        strategyFactory = new LockstakeCumpounderFactory(
+        strategyFactory = new LockstakeCompounderFactory(
             management,
             performanceFeeRecipient,
             keeper,

@@ -9,14 +9,14 @@ import {IStaking} from "./interfaces/IStaking.sol";
 import {Auction} from "@periphery/Auctions/Auction.sol";
 import {MultiSwapper, Hop, Dex} from "./periphery/MultiSwapper.sol";
 
-/// @title LockstakeCumpounder
+/// @title LockstakeCompounder
 /// @notice A Yearn V3 TokenizedStrategy that (COIN is defined at deployment):
 ///         1) Opens URN #0 on LockstakeEngine for itself and selects the COIN farm.
 ///         2) Locks SKY → COIN farm via LockstakeEngine.lock(...).
 ///         3) Periodically claims COIN rewards, swaps COIN→SKY, and re-locks SKY to compound.
 ///         4) Frees SKY on withdrawals.
 ///
-contract LockstakeCumpounder is BaseHealthCheck, MultiSwapper {
+contract LockstakeCompounder is BaseHealthCheck, MultiSwapper {
     using SafeERC20 for ERC20;
 
     /// @notice Which URN index we use for this strategy (we fix to 0).

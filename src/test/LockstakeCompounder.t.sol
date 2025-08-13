@@ -2,10 +2,10 @@
 pragma solidity ^0.8.18;
 
 import {Setup, ERC20, IStrategyInterface} from "./utils/Setup.sol";
-import {LockstakeCumpounder, Hop, Dex} from "../LockstakeCumpounder.sol";
+import {LockstakeCompounder, Hop, Dex} from "../LockstakeCompounder.sol";
 import {Auction} from "@periphery/Auctions/Auction.sol";
 
-contract LockstakeCumpounderTest is Setup {
+contract LockstakeCompounderTest is Setup {
     address public mockAuction;
 
     function setUp() public virtual override {

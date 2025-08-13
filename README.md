@@ -4,7 +4,7 @@ This repository contains the implementation of a Yearn V3 tokenized strategy for
 
 ## Overview
 
-The `LockStakeCumpounder` strategy is designed to manage deposits in a staking contract where rewards are distributed in a secondary token. The core functions of the strategy include:
+The `LockstakeCompounder` strategy is designed to manage deposits in a staking contract where rewards are distributed in a secondary token. The core functions of the strategy include:
 
 - **Staking**: Deposits the underlying asset into the `Lockstake` contract.
 - **Reward Compounding**: Periodically claims rewards and swaps them for the underlying asset, which is then redeposited to compound returns.
@@ -14,8 +14,8 @@ The `LockStakeCumpounder` strategy is designed to manage deposits in a staking c
 
 The project consists of the following key components:
 
-- **`LockStakeCumpounder.sol`**: The main strategy implementation, inheriting from Yearn's `BaseStrategy`.
-- **`LockStakeCumpounderFactory.sol`**: A factory contract for deploying new instances of the `LockStakeCumpounder` strategy.
+- **`LockstakeCompounder.sol`**: The main strategy implementation, inheriting from Yearn's `BaseStrategy`.
+- **`LockstakeCompounderFactory.sol`**: A factory contract for deploying new instances of the `LockstakeCompounder` strategy.
 - **`StrategyAprOracle.sol`**: A periphery contract to calculate the APR of the strategy based on debt changes.
 - **Interfaces**: A collection of interfaces for interacting with external contracts, such as `ILockstakeEngine`, `IQuoter`, and `IStaking`.
 
@@ -65,7 +65,7 @@ The project consists of the following key components:
 
 ## Deployment
 
-To deploy the contracts, you can use the provided `Deploy` script. The script will deploy the `StrategyAprOracle`, `LockstakeCumpounderFactory`, and a new `LockStakeCumpounder` strategy instance.
+To deploy the contracts, you can use the provided `Deploy` script. The script will deploy the `StrategyAprOracle`, `LockstakeCompounderFactory`, and a new `LockstakeCompounder` strategy instance.
 
 ```sh
 forge script script/Deploy.s.sol --rpc-url <your_rpc_url> --broadcast

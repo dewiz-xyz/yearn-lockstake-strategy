@@ -4,8 +4,8 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {Deploy} from "./Deploy.s.sol";
-import {LockstakeCumpounder, Hop, Dex} from "../src/LockstakeCumpounder.sol";
-import {LockstakeCumpounderFactory} from "../src/LockstakeCumpounderFactory.sol";
+import {LockstakeCompounder, Hop, Dex} from "../src/LockstakeCompounder.sol";
+import {LockstakeCompounderFactory} from "../src/LockstakeCompounderFactory.sol";
 import {StrategyAprOracle} from "../src/periphery/StrategyAprOracle.sol";
 import {IStrategyInterface} from "../src/interfaces/IStrategyInterface.sol";
 
@@ -46,7 +46,7 @@ contract DeployTest is Test {
         assertTrue(factoryAddress != address(0), "Factory should be deployed");
         assertTrue(factoryAddress.code.length > 0, "Factory should have code");
         
-        LockstakeCumpounderFactory factory = LockstakeCumpounderFactory(factoryAddress);
+        LockstakeCompounderFactory factory = LockstakeCompounderFactory(factoryAddress);
         
         // Verify factory constructor settings
         assertEq(factory.management(), deployScript.SMS(), "Factory management should be SMS");
@@ -72,8 +72,8 @@ contract DeployTest is Test {
         assertEq(strategyContract.performanceFeeRecipient(), deployScript.ACCOUNTANT(), "Strategy performance fee recipient should be ACCOUNTANT");
         assertEq(strategyContract.keeper(), deployScript.KEEPER(), "Strategy keeper should be KEEPER");
         
-        // Verify swap path is set correctly using LockstakeCumpounder interface
-        LockstakeCumpounder lockstakeContract = LockstakeCumpounder(strategyAddress);
+        // Verify swap path is set correctly using LockstakeCompounder interface
+        LockstakeCompounder lockstakeContract = LockstakeCompounder(strategyAddress);
         Hop[] memory deployedPath = lockstakeContract.getSwapPath();
         assertEq(deployedPath.length, 3, "Swap path should have 3 hops");
         

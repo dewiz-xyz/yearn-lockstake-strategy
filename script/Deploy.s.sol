@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import {Script} from "forge-std/Script.sol";
-import {LockstakeCumpounder, Hop, Dex} from "../src/LockstakeCumpounder.sol";
-import {LockstakeCumpounderFactory} from "../src/LockstakeCumpounderFactory.sol";
+import {LockstakeCompounder, Hop, Dex} from "../src/LockstakeCompounder.sol";
+import {LockstakeCompounderFactory} from "../src/LockstakeCompounderFactory.sol";
 import {console} from "forge-std/console.sol";
 import {IStrategyInterface} from "../src/interfaces/IStrategyInterface.sol";
 import {StrategyAprOracle} from "../src/periphery/StrategyAprOracle.sol";
@@ -28,9 +28,9 @@ contract Deploy is Script {
         StrategyAprOracle oracle = new StrategyAprOracle();
         console.log("StrategyAprOracle deployed to:", address(oracle));
 
-        LockstakeCumpounderFactory factory = new LockstakeCumpounderFactory(SMS, ACCOUNTANT, KEEPER, SMS);
+        LockstakeCompounderFactory factory = new LockstakeCompounderFactory(SMS, ACCOUNTANT, KEEPER, SMS);
 
-        console.log("LockstakeCumpounderFactory deployed to:", address(factory));
+        console.log("LockstakeCompounderFactory deployed to:", address(factory));
 
         Hop[] memory path = new Hop[](3);
         path[0] = Hop(Dex.UniV3, SPK, USDC, 100);

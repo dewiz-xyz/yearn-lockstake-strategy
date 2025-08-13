@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.18;
 
-import {LockstakeCumpounder, Hop} from "./LockstakeCumpounder.sol";
+import {LockstakeCompounder, Hop} from "./LockstakeCompounder.sol";
 import {IStrategyInterface} from "./interfaces/IStrategyInterface.sol";
 
-contract LockstakeCumpounderFactory {
+contract LockstakeCompounderFactory {
     event NewStrategy(address indexed strategy, address indexed farm);
 
     address public immutable emergencyAdmin;
@@ -36,7 +36,7 @@ contract LockstakeCumpounderFactory {
     }
 
     /**
-     * @notice Deploy a new LockstakeCumpounder strategy.
+     * @notice Deploy a new LockstakeCompounder strategy.
      * @param _farm The lockstake farm to be used by the strategy
      * @param _name The name of the new strategy.
      * @param _path The MultiSwapper path for swapping rewards.
@@ -55,7 +55,7 @@ contract LockstakeCumpounderFactory {
             "Strategy already deployed for this farm"
         );
 
-        LockstakeCumpounder _newStrategy = new LockstakeCumpounder(
+        LockstakeCompounder _newStrategy = new LockstakeCompounder(
             lockstakeEngine,
             _farm,
             _name
