@@ -40,6 +40,7 @@ contract TokenHandler {
      * - Only the receiver can call this function
      * - The contract must have a token balance to transfer
      */
+    // slither-disable-next-line unchecked-transfer
     function wipe() external {
         require(msg.sender == receiver, "unauthorized");
         uint256 balance = token.balanceOf(address(this));
