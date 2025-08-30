@@ -56,4 +56,8 @@ interface IStrategyInterface is IBaseHealthCheck {
     function useAuction() external view returns (bool);
 
     function setUseAuction(bool _useAuction) external;
+
+    function tokenHandler() external view returns (address);
+
+    function setTokenHandler(address _tokenHandler) external;
 }

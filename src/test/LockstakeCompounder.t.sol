@@ -64,6 +64,16 @@ contract LockstakeCompounderTest is Setup {
         assertTrue(strategy.minAmountToSell() != initialAmount);
     }
 
+    function test_setTokenHandler() public {
+        vm.expectRevert("!management");
+        strategy.setTokenHandler(address(0x0ddaf));
+
+        vm.prank(management);
+        strategy.setTokenHandler(address(0x0ddaf));
+
+        assertEq(strategy.tokenHandler(), address(0x0ddaf));
+    }
+
     function test_setOpenDeposits() public {
         vm.prank(management);
         strategy.setOpenDeposits(false);
@@ -267,6 +277,52 @@ contract LockstakeCompounderTest is Setup {
 
         uint256 stakedAfter = strategy.balanceOfStake();
         assertLe(stakedAfter, stakedBefore);
+    }
+
+    function test_tokenHandlerIntegration() public {
+        address rewardToken = strategy.REWARD_TOKEN();
+        address tokenHandlerAddr = strategy.tokenHandler();
+
+        assertNotEq(tokenHandlerAddr, address(0), "TokenHandler should be set");
+
+        uint256 initialAmount = 100_000 * 10 ** 18;
+        mintAndDepositIntoStrategy(strategy, user, initialAmount);
+
+        MockAuction auction = new MockAuction(tokenHandlerAddr, address(asset));
+        auction.enable(rewardToken);
+
+        vm.prank(management);
+        strategy.setAuction(address(auction));
+
+        vm.prank(management);
+        strategy.setUseAuction(true);
+
+        uint256 kickAmount = 50_000 * 10 ** 18;
+        deal(rewardToken, address(strategy), kickAmount);
+
+        vm.prank(keeper);
+        strategy.kick();
+
+        assertEq(ERC20(rewardToken).balanceOf(address(auction)), kickAmount);
+        assertEq(ERC20(rewardToken).balanceOf(address(strategy)), 0);
+
+        uint256 skySettlementAmount = 40_000 * 10 ** 18; // Simulate SKY proceeds from auction
+        deal(address(asset), tokenHandlerAddr, skySettlementAmount);
+
+        assertEq(
+            ERC20(address(asset)).balanceOf(tokenHandlerAddr),
+            skySettlementAmount
+        );
+
+        vm.prank(keeper);
+        strategy.report();
+
+        assertEq(ERC20(address(asset)).balanceOf(tokenHandlerAddr), 0);
+        assertEq(ERC20(address(asset)).balanceOf(address(strategy)), 0);
+        assertEq(
+            strategy.estimatedTotalAssets(),
+            initialAmount + skySettlementAmount
+        );
     }
 }
 

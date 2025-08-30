@@ -3,6 +3,7 @@ pragma solidity ^0.8.18;
 
 import {LockstakeCompounder, Hop} from "./LockstakeCompounder.sol";
 import {IStrategyInterface} from "./interfaces/IStrategyInterface.sol";
+import {TokenHandler} from "./periphery/TokenHandler.sol";
 
 contract LockstakeCompounderFactory {
     event NewStrategy(address indexed strategy, address indexed farm);
@@ -14,6 +15,8 @@ contract LockstakeCompounderFactory {
     address public keeper;
 
     address public lockstakeEngine = 0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3;
+
+    address public constant SKY = 0x56072C95FAA701256059aa122697B133aDEd9279;
 
     /// @notice Track the deployments. farm => strategy
     mapping(address => address) public deployments;
@@ -63,6 +66,11 @@ contract LockstakeCompounderFactory {
 
         deployments[_farm] = address(_newStrategy);
 
+        TokenHandler _tokenHandler = new TokenHandler(
+            address(_newStrategy),
+            SKY
+        );
+
         IStrategyInterface _strategyInterface = IStrategyInterface(
             address(_newStrategy)
         );
@@ -72,6 +80,8 @@ contract LockstakeCompounderFactory {
         _strategyInterface.setKeeper(keeper);
 
         _strategyInterface.setSwapPath(_path);
+
+        _strategyInterface.setTokenHandler(address(_tokenHandler));
 
         _strategyInterface.setPendingManagement(management);
 

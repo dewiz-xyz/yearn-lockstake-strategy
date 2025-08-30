@@ -6,6 +6,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ISwapRouter} from "@periphery/interfaces/Uniswap/V3/ISwapRouter.sol";
 import {ILockstakeEngine} from "./interfaces/ILockstakeEngine.sol";
 import {IStaking} from "./interfaces/IStaking.sol";
+import {ITokenHandler} from "./interfaces/ITokenHandler.sol";
 import {Auction} from "@periphery/Auctions/Auction.sol";
 import {MultiSwapper, Hop, Dex} from "./periphery/MultiSwapper.sol";
 
@@ -57,6 +58,9 @@ contract LockstakeCompounder is BaseHealthCheck, MultiSwapper {
 
     /// @notice Allowlist if deposits are closed.
     mapping(address => bool) public allowed;
+
+    /// @notice Address of the token handler contract for collecting tokens
+    address public tokenHandler;
 
     /// @notice Initializes the contract with the given parameters.
     /// @param _lockstakeEngine The address of the LockstakeEngine contract.
@@ -110,6 +114,10 @@ contract LockstakeCompounder is BaseHealthCheck, MultiSwapper {
             address(this)
         );
 
+        if (tokenHandler != address(0)) {
+            ITokenHandler(tokenHandler).wipe();
+        }
+
         uint256 balance = REWARD_TOKEN.balanceOf(address(this));
         if (balance > minAmountToSell) {
             if (useAuction) {
@@ -141,14 +149,18 @@ contract LockstakeCompounder is BaseHealthCheck, MultiSwapper {
     }
 
     /// @notice Returns an approximate value of total assets (SKY) under management:
-    ///         what’s currently staked in URN #0 plus any SKY already sitting in the contract.
-    /// @return The total assets under management.
+    ///         what's currently staked in URN #0 plus any SKY already sitting in the contract.
+    /// @return The estimated total assets under management.
     function estimatedTotalAssets() public view returns (uint256) {
         // Locked & staked SKY in URN #0:
         uint256 stakedSky = balanceOfStake();
         // Plus any SKY sitting idle in this contract:
         uint256 idleSky = SKY.balanceOf(address(this));
-        return stakedSky + idleSky;
+        // Plus any SKY in the TokenHandler waiting to be collected:
+        uint256 tokenHandlerSky = tokenHandler != address(0)
+            ? SKY.balanceOf(tokenHandler)
+            : 0;
+        return stakedSky + idleSky + tokenHandlerSky;
     }
 
     /// @notice Returns the amount of SKY staked in the farm for the URN.
@@ -221,7 +233,11 @@ contract LockstakeCompounder is BaseHealthCheck, MultiSwapper {
     /// @param _auction The address of the auction contract.
     function setAuction(address _auction) external onlyManagement {
         if (_auction != address(0)) {
-            require(Auction(_auction).receiver() == address(this), "receiver");
+            address receiver = Auction(_auction).receiver();
+            require(
+                receiver == address(this) || receiver == tokenHandler,
+                "receiver"
+            );
             require(Auction(_auction).want() == address(asset), "want");
         }
         auction = _auction;
@@ -250,6 +266,12 @@ contract LockstakeCompounder is BaseHealthCheck, MultiSwapper {
             URN_INDEX,
             voteDelegate
         );
+    }
+
+    /// @notice Sets the token handler contract address.
+    /// @param _tokenHandler The address of the token handler contract.
+    function setTokenHandler(address _tokenHandler) external onlyManagement {
+        tokenHandler = _tokenHandler;
     }
 
     /// @dev Returns the minimum of two unsigned integers.
