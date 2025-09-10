@@ -1,4 +1,7 @@
 {
     "detectors_to_exclude": "naming-convention,unused-return",
-    "filter_paths": "(lib/|src/test)"
+    "filter_paths": "(lib/|src/test)",
+    "fail_medium": true,
+    "exclude_informational": true,
+    "exclude_low": true
 }
