@@ -39,7 +39,8 @@ contract OracleTest is Setup {
         );
         assertGt(currentApr, positiveDebtChangeApr, "positive change");
 
-        // TODO: Uncomment if there are setter functions to test. /// @dev no setters in this oracle
+        // TODO: Uncomment if there are setter functions to test.
+        /// @dev no setters in this oracle
         /**
          * vm.expectRevert("!governance");
          *     vm.prank(user);
